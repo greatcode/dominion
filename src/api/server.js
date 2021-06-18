@@ -1,3 +1,4 @@
+
 "use strict";
 
 const Promise = global.Promise || require("promise");

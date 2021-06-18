@@ -1,3 +1,4 @@
+
 const path = require('path')
 
 // Middleware to expose the app's shared templates to the client-side of the app

@@ -3,10 +3,12 @@
   "version": "0.0.0",
   "description": "",
   "private": true,
-  "main": "api/server.js",
+  "main": "build/api/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=dev ./node_modules/.bin/nodemon --watch .  api/server.js"
+    "build": "./build.sh",
+    "flow": "./node_modules/.bin/nodemon -e js,css,html,json,handlebars --watch src --exec ./flow-clean-exit.sh",
+    "start": "NODE_ENV=dev ./node_modules/.bin/nodemon --watch build",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "express": "^4.17.1",
@@ -14,6 +16,8 @@
     "socket.io": "^4.1.2"
   },
   "devDependencies": {
+    "flow-bin": "^0.153.0",
+    "flow-remove-types": "^2.153.0",
     "livereload": "^0.9.3",
     "nodemon": "^2.0.7"
   }
