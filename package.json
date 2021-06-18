@@ -16,6 +16,7 @@
     "socket.io": "^4.1.2"
   },
   "devDependencies": {
+    "connect-livereload": "^0.6.1",
     "flow-bin": "^0.153.0",
     "flow-remove-types": "^2.153.0",
     "livereload": "^0.9.3",
