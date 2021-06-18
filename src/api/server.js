@@ -19,9 +19,10 @@ if (process.env.NODE_ENV !== 'production') {
   const connectLiveReload = require('connect-livereload')
 
   const liveReloadServer = livereload.createServer({
-    exts: ['handlebars']
+    exts: ['handlebars', 'css']
   })
   liveReloadServer.watch(path.join(__dirname, '../ui/views'))
+  liveReloadServer.watch(path.join(__dirname, '../ui/public'))
 
   app.use(connectLiveReload())
 }
