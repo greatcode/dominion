@@ -38,6 +38,10 @@ function echoMessage(req, res) {
   });
 }
 
+function startGame(req, res) {
+  res.render("start_game", {});
+}
+
 function load(options) {
   const { app, hbs } = options
 
@@ -45,6 +49,7 @@ function load(options) {
   app.get("/yell", yell);
   app.get("/exclaim", exclaim);
   app.get("/echo/:message?", middleware.exposeTemplates({app, hbs}), echoMessage);
+  app.get("/start_game", startGame);
 }
 
 exports.load = load
