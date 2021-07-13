@@ -15,18 +15,18 @@ function onConnection(socket) {
     console.log('socket works')
   })
 
-  socket.on('addToWaitRoom', () => {
-      roomName = socket.id.slice(0,7)
-      if (!waitingRooms.includes(roomName)) {
-        waitingRooms.push(roomName)
-        socket.join(roomName)
-        console.log(waitingRooms)
-      }
-    })
+  // socket.on('addToWaitRoom', () => {
+  //     roomName = socket.id.slice(0,7)
+  //     if (!waitingRooms.includes(roomName)) {
+  //       waitingRooms.push(roomName)
+  //       console.log(waitingRooms)
+  //     }
+  //   })
 
   socket.on('addToGame', () => {
     if (waitingRooms.length >= 1) {
-      socket.join(waitingRooms[0])
+      roomName = waitingRooms[0]
+      socket.emit('startGame', roomName)
       activeRooms.push(waitingRooms.pop())
       console.log(activeRooms)
     }
@@ -34,8 +34,8 @@ function onConnection(socket) {
       roomName = socket.id.slice(0,7)
       if (!waitingRooms.includes(roomName)) {
         waitingRooms.push(roomName)
-        socket.join(roomName)
-        console.log(roomName)
+        socket.emit('startGame', roomName)
+        console.log(waitingRooms.length + ' ' + activeRooms)
       }
     }
   })

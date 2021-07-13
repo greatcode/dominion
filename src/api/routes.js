@@ -38,8 +38,12 @@ function echoMessage(req, res) {
   });
 }
 
+function gameHome(req, res) {
+  res.render("game_home", {});
+}
+
 function startGame(req, res) {
-  res.render("start_game", {});
+  res.render('start_game')
 }
 
 function load(options) {
@@ -49,7 +53,8 @@ function load(options) {
   app.get("/yell", yell);
   app.get("/exclaim", exclaim);
   app.get("/echo/:message?", middleware.exposeTemplates({app, hbs}), echoMessage);
-  app.get("/start_game", startGame);
+  app.get("/game_home/", gameHome);
+  app.get("/start_game/:gameid?", startGame);
 }
 
 exports.load = load
