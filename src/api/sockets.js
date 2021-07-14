@@ -1,10 +1,12 @@
 //
 
 let waitingRooms = []
-let activeRooms = []
+let activeRooms = {}
 
 function onConnection(socket) {
   console.log('A user connected')
+
+  let room = 0
 
   // Whenever someone disconnects this piece of code executes
   socket.on('disconnect', function () {
@@ -16,8 +18,17 @@ function onConnection(socket) {
   })
 
   socket.on('addToQueue', () => {
-    waitingRooms.push(socket)
+      if (!waitingRooms.includes(socket)) {
+      waitingRooms.push(socket)
+
+        if (waitingRooms.length >= 2) {
+          gameRoom = room += 1
+          activeRooms[gameRoom] = [waitingRooms.pop(0), waitingRooms.pop(1)]
+        }
+    }
   })
+
+
 
 
   // socket.on('addToGame', () => {
