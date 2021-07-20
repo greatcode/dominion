@@ -1,0 +1,21 @@
+      if (Object.keys(waitingRooms).length === 0) {
+        room ++
+        gameRoom = 'gameRoom' + room
+        waitingRooms[gameRoom] = [socket]
+        console.log('waiting')
+      }
+
+      else if (waitingRooms[gameRoom][0] !== socket) {
+        waitingRooms[gameRoom].push(socket)
+        console.log('push')
+        activeRooms[gameRoom] = waitingRooms[gameRoom]
+        console.log('active')
+        delete waitingRooms[gameRoom]
+        console.log('delete')
+        for (const i in activeRooms[gameRoom]) {
+          console.log('in')
+          player = activeRooms[gameRoom][i]
+          // player.join(gameRoom)
+          activeRooms[gameRoom][i].emit('joinRoom', 'test')
+        }
+      }

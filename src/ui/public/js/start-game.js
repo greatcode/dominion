@@ -1,20 +1,32 @@
 
 const socket = io()
 
-// const createGame = document.getElementById('createGame')
-const joinGame = document.getElementById('joinGame')
 
-// createGame.addEventListener('click', addToWaitingRoom)
+const joinGame = document.getElementById('joinGame')
+const waiting = document.getElementById('waiting')
+const you = document.getElementById('you')
+const opponent = document.getElementById('opponent')
+
 joinGame.addEventListener('click', addToQueue)
 
-// function addToWaitingRoom () {
-//     socket.emit('addToWaitRoom')
-// }
 
 function addToQueue () {
     socket.emit('addToQueue')
+    waiting.innerText = 'waiting to join game'
+    
 }
 
-socket.on('startGame', (roomName) => {
-    window.location.href = 'http://localhost:3000/start_game/' + roomName
+socket.on('playerReady', (player) => {
+   waiting.innerText = `${player.player} is waiting to play`
 })
+
+socket.on('startingGame', (player) => {
+    waiting.style.display = 'none'
+    you.innerText = `You: ${player.you}`
+})
+
+socket.on('opponent', (player) => {
+    opponent.innerText = `Opponent: ${player.opponent}`
+})
+
+

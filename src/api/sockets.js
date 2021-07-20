@@ -19,34 +19,33 @@ function onConnection(socket) {
 
   socket.on('addToQueue', () => {
       if (!waitingRooms.includes(socket)) {
-      waitingRooms.push(socket)
+        waitingRooms.push(socket)
 
         if (waitingRooms.length >= 2) {
-          gameRoom = room += 1
+          console.log('second if')
+          room ++
+          gameRoom = 'room ' + room
           activeRooms[gameRoom] = [waitingRooms.pop(0), waitingRooms.pop(1)]
+          console.log('waiting Rooms ' + waitingRooms.length)
+          console.log(activeRooms[gameRoom].length)
+          for (const i in activeRooms[gameRoom]) {
+            player = activeRooms[gameRoom][i]
+            player.emit('startingGame', {
+              you: activeRooms[gameRoom][i].id
+            })
+          }
+          for (const i in activeRooms[gameRoom]) {
+            player = activeRooms[gameRoom][i]
+            player.broadcast.emit('opponent', {
+              opponent: activeRooms[gameRoom][i].id
+            })
+          }
+        }
+        else {
+          socket.broadcast.emit('playerReady', {player: socket.id})
         }
     }
   })
-
-
-
-
-  // socket.on('addToGame', () => {
-  //   if (waitingRooms.length >= 1) {
-  //     roomName = waitingRooms[0]
-  //     socket.emit('startGame', roomName)
-  //     activeRooms.push(waitingRooms.pop())
-  //     console.log(activeRooms)
-  //   }
-  //   else {
-  //     roomName = socket.id.slice(0,7)
-  //     if (!waitingRooms.includes(roomName)) {
-  //       waitingRooms.push(roomName)
-  //       socket.emit('startGame', roomName)
-  //       console.log(waitingRooms.length + ' ' + activeRooms)
-  //     }
-  //   }
-  // })
 
 }
 
