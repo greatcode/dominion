@@ -23,12 +23,9 @@ function onConnection(socket) {
         waitingRooms.push(socket)
 
         if (waitingRooms.length >= 2) {
-          console.log('second if')
-          room ++
+          room++
           gameRoom = 'room ' + room
-          activeRooms[gameRoom] = [waitingRooms.pop(0), waitingRooms.pop(1)]
-          console.log('waiting Rooms ' + waitingRooms.length)
-          console.log(activeRooms[gameRoom].length)
+          activeRooms[gameRoom] = [waitingRooms.pop(), waitingRooms.pop()]
           for (const i in activeRooms[gameRoom]) {
             player = activeRooms[gameRoom][i]
             player.emit('startingGame', {
