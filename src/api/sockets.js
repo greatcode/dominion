@@ -2,11 +2,12 @@
 
 let waitingRooms = []
 let activeRooms = {}
+let room = 0
 
 function onConnection(socket) {
   console.log('A user connected')
 
-  let room = 0
+  
 
   // Whenever someone disconnects this piece of code executes
   socket.on('disconnect', function () {
