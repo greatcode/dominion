@@ -7,6 +7,7 @@ let room = 0
 function onConnection(socket) {
   console.log('A user connected')
 
+  card = 0
   
 
   // Whenever someone disconnects this piece of code executes
@@ -24,17 +25,27 @@ function onConnection(socket) {
 
         if (waitingRooms.length >= 2) {
           room++
-          gameRoom = 'room ' + room
+          gameRoom = 'room' + room
           activeRooms[gameRoom] = [waitingRooms.pop(), waitingRooms.pop()]
-          for (const i in activeRooms[gameRoom]) {
-            player = activeRooms[gameRoom][i]
-            player.emit('startingGame', {
-              you: activeRooms[gameRoom][i].id
+          if (waitingRooms.length == 0) {
+            socket.broadcast.emit('clearWaitingRoom')
+          }
+          else {
+            socket.broadcast.emit('playerReady', {
+              player: waitingRooms[0].id
             })
           }
           for (const i in activeRooms[gameRoom]) {
             player = activeRooms[gameRoom][i]
-            player.broadcast.emit('opponent', {
+            player.join(gameRoom)
+            player.emit('startingGame', {
+              you: activeRooms[gameRoom][i].id,
+              room: gameRoom
+            })
+          }
+          for (const i in activeRooms[gameRoom]) {
+            player = activeRooms[gameRoom][i]
+            player.to(gameRoom).emit('opponent', {
               opponent: activeRooms[gameRoom][i].id
             })
           }
@@ -44,6 +55,8 @@ function onConnection(socket) {
         }
     }
   })
+
+
 
 }
 
