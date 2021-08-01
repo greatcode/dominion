@@ -1,10 +1,6 @@
+import { PersonalDeck } from "./player-deck"
 
 const socket = io()
-
-
-import PersonalDeck from './player-deck'
-
-let playerDeck = new PersonalDeck()
 
 
 

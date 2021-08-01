@@ -1,6 +1,5 @@
 
-
-export default class PersonalDeck{
+export class PersonalDeck{
   constructor() {
     this.drawPile = []
     this.hand = []
@@ -32,5 +31,3 @@ export default class PersonalDeck{
       }
   }
 }
-
-module.exports = PersonalDeck
