@@ -51,6 +51,14 @@ function onConnection(socket) {
     }
   })
 
+  socket.on('drawPile', (pile) => {
+   socket.to(pile.room).emit('opponentPile', {'pile': pile.pile})
+  })
+
+  socket.on('currentHand', (hand) => {
+    socket.to(hand.room).emit('opponentHand', {'hand': hand.hand})
+  })
+
 
 
 }
