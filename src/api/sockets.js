@@ -15,10 +15,11 @@ function onConnection(socket) {
   })
 
   socket.on('addToQueue', () => {
+    const PLAYERS_PER_GAME = 2
     if (!waitingRooms.includes(socket)) {
       waitingRooms.push(socket)
 
-      if (waitingRooms.length >= 2) {
+      if (waitingRooms.length >= PLAYERS_PER_GAME) {
         room++
         gameRoom = 'room' + room
         activeRooms[gameRoom] = [waitingRooms.pop(), waitingRooms.pop()]
@@ -52,11 +53,15 @@ function onConnection(socket) {
   })
 
   socket.on('drawPile', (pile) => {
-   socket.to(pile.room).emit('opponentPile', {'pile': pile.pile})
+   socket.to(pile.room).emit('opponentPile', {'servePile': pile.emitPile})
   })
 
   socket.on('currentHand', (hand) => {
-    socket.to(hand.room).emit('opponentHand', {'hand': hand.hand})
+    socket.to(hand.room).emit('opponentHand', {'serveHand': hand.emitHand})
+  })
+
+  socket.on('discardPile', (pile) => {
+    socket.to(pile.room).emit('opponentDiscard', {'serveDiscard': pile.emitDiscard})
   })
 
 
