@@ -112,7 +112,7 @@ socket.on('startingGame', (player) => {
 })
 
 socket.on('opponentPile', (pile) => {
-  opponentDrawPile.innerText = `Opponent Draw Pile: ${pile.servePile} cards`
+  opponentDrawPile.innerText = `Opponent Draw Pile: ${pile.serveDrawPile} cards`
 })
 
 socket.on('opponentHand', (hand) => {

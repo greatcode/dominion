@@ -55,7 +55,7 @@ function onConnection(socket) {
   })
 
   socket.on('drawPile', (pile) => {
-   socket.to(pile.room).emit('opponentPile', {'servePile': pile.emitPile})
+   socket.to(pile.room).emit('opponentPile', {'serveDrawPile': pile.emitPile})
   })
 
   socket.on('currentHand', (hand) => {
@@ -63,7 +63,7 @@ function onConnection(socket) {
   })
 
   socket.on('discardPile', (pile) => {
-    socket.to(pile.room).emit('opponentDiscard', {'serveDiscard': pile.emitDiscard})
+    socket.to(pile.room).emit('opponentDiscard', {'serveDiscardPile': pile.emitDiscard})
   })
 
 
