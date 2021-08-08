@@ -6,6 +6,7 @@ const yourDeck = new PersonalDeck()
 
 
 const joinGameButton = document.getElementById('joinGameButton')
+const leaveWaitingRoomButton = document.getElementById('leaveWaitingRoom')
 const drawHandButton = document.getElementById('drawHandButton')
 const discardButton = document.getElementById('discardButton')
 const waiting = document.getElementById('waiting')
@@ -23,15 +24,24 @@ const yourDiscardPile = document.getElementById('yourDiscardPile')
 
 
 joinGameButton.addEventListener('click', addToQueue)
+leaveWaitingRoomButton.addEventListener('click', exitWaitingRoom)
 drawHandButton.addEventListener('click', drawHand)
 discardButton.addEventListener('click', toDiscardPile)
 
 
 function addToQueue () {
   socket.emit('addToQueue')
-  waiting.style.display = 'block'
   waiting.innerText = 'waiting to join game'
-    
+  joinGameButton.style.display = 'none'
+  leaveWaitingRoomButton.style.display = 'block'
+}
+
+function exitWaitingRoom () {
+  socket.emit('leaveWaitingRoom')
+  waiting.innerText = ''
+  joinGameButton.style.display = 'block'
+  leaveWaitingRoomButton.style.display = 'none'
+
 }
 
 function updateDrawPile (){
@@ -92,15 +102,13 @@ socket.on('playerReady', (player) => {
 
 socket.on('startingGame', (player) => {
   you.innerText = `You: ${player.you}`
+  opponent.innerText = `Opponent: ${player.opponentId}`
   gameRoom.innerText = `${player.room}`
+  waiting.style.display = 'none'
+  leaveWaitingRoomButton.style.display = 'none'
   drawHandButton.style.display = 'block'
   yourDeck.createStartingPile()
   updateDrawPile()
-})
-
-socket.on('opponent', (player) => {
-  opponent.innerText = `Opponent: ${player.opponent}`
-  waiting.style.display = 'none'
 })
 
 socket.on('opponentPile', (pile) => {

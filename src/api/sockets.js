@@ -33,16 +33,12 @@ function onConnection(socket) {
         }
         for (const i in activeRooms[gameRoom]) {
           player = activeRooms[gameRoom][i]
+          opponent = activeRooms[gameRoom].filter(players => players != player)
           player.join(gameRoom)
           player.emit('startingGame', {
-            you: activeRooms[gameRoom][i].id,
+            you: player.id,
+            opponentId: opponent[0].id,
             room: gameRoom
-          })
-        }
-        for (const i in activeRooms[gameRoom]) {
-          player = activeRooms[gameRoom][i]
-          player.to(gameRoom).emit('opponent', {
-            opponent: activeRooms[gameRoom][i].id
           })
         }
       }
@@ -50,6 +46,12 @@ function onConnection(socket) {
         socket.broadcast.emit('playerReady', {player: socket.id})
       }
     }
+  })
+
+  socket.on('leaveWaitingRoom', () => {
+    const socketToRemove = waitingRooms.indexOf(socket)
+    const removeSocket = waitingRooms.splice(socketToRemove, 1);
+    socket.broadcast.emit('clearWaitingRoom')
   })
 
   socket.on('drawPile', (pile) => {
