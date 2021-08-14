@@ -14,36 +14,59 @@ function onConnection(socket) {
     console.log('A user disconnected')
   })
 
-  socket.on('test', function(){
-    console.log('socket works')
-  })
-
   socket.on('addToQueue', () => {
-      if (!waitingRooms.includes(socket)) {
-        waitingRooms.push(socket)
+    const PLAYERS_PER_GAME = 2
+    if (!waitingRooms.includes(socket)) {
+      waitingRooms.push(socket)
 
-        if (waitingRooms.length >= 2) {
-          room++
-          gameRoom = 'room ' + room
-          activeRooms[gameRoom] = [waitingRooms.pop(), waitingRooms.pop()]
-          for (const i in activeRooms[gameRoom]) {
-            player = activeRooms[gameRoom][i]
-            player.emit('startingGame', {
-              you: activeRooms[gameRoom][i].id
-            })
-          }
-          for (const i in activeRooms[gameRoom]) {
-            player = activeRooms[gameRoom][i]
-            player.broadcast.emit('opponent', {
-              opponent: activeRooms[gameRoom][i].id
-            })
-          }
+      if (waitingRooms.length >= PLAYERS_PER_GAME) {
+        room++
+        gameRoom = 'room' + room
+        activeRooms[gameRoom] = [waitingRooms.pop(), waitingRooms.pop()]
+        if (waitingRooms.length == 0) {
+          socket.broadcast.emit('clearWaitingRoom')
         }
         else {
-          socket.broadcast.emit('playerReady', {player: socket.id})
+          socket.broadcast.emit('playerReady', {
+            player: waitingRooms[0].id
+          })
         }
+        for (const i in activeRooms[gameRoom]) {
+          player = activeRooms[gameRoom][i]
+          opponent = activeRooms[gameRoom].filter(players => players != player)
+          player.join(gameRoom)
+          player.emit('startingGame', {
+            you: player.id,
+            opponentId: opponent[0].id,
+            room: gameRoom
+          })
+        }
+      }
+      else {
+        socket.broadcast.emit('playerReady', {player: socket.id})
+      }
     }
   })
+
+  socket.on('leaveWaitingRoom', () => {
+    const socketToRemove = waitingRooms.indexOf(socket)
+    const removeSocket = waitingRooms.splice(socketToRemove, 1);
+    socket.broadcast.emit('clearWaitingRoom')
+  })
+
+  socket.on('drawPile', (pile) => {
+   socket.to(pile.room).emit('opponentPile', {'serveDrawPile': pile.emitPile})
+  })
+
+  socket.on('currentHand', (hand) => {
+    socket.to(hand.room).emit('opponentHand', {'serveHand': hand.emitHand})
+  })
+
+  socket.on('discardPile', (pile) => {
+    socket.to(pile.room).emit('opponentDiscard', {'serveDiscardPile': pile.emitDiscard})
+  })
+
+
 
 }
 
