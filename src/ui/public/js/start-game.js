@@ -78,22 +78,18 @@ function toDiscardPile (){
 
 function drawHand (){
   const CARDS_NEEDED_TO_DRAWHAND = 3
-  if (yourDeck.drawPile.length >= CARDS_NEEDED_TO_DRAWHAND) {
-    for (let i = 1; i <= CARDS_NEEDED_TO_DRAWHAND; i++) {
-      yourDeck.drawCard()
-    }
-    updateHand()
-    updateDrawPile()
-    discardButton.style.display = 'block'
-    drawHandButton.style.display = 'none'
-
-  }
-  else {
+  if (yourDeck.drawPile.length < CARDS_NEEDED_TO_DRAWHAND) {
     yourDeck.replinishDrawPile()
     updateDrawPile()
     updateDiscardPile()
-    drawHand()
   }
+  for (let i = 1; i <= CARDS_NEEDED_TO_DRAWHAND; i++) {
+    yourDeck.drawCard()
+  }
+  updateHand()
+  updateDrawPile()
+  discardButton.style.display = 'block'
+  drawHandButton.style.display = 'none'
 }
 
 socket.on('playerReady', (player) => {

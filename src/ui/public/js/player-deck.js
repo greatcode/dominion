@@ -48,9 +48,7 @@ export class PersonalDeck{
 
   replinishDrawPile(){
     this.discardPile = this._shuffleCards(this.discardPile)
-    let discardPileLength = this.discardPile.length
-    for (let i = 1; i <= discardPileLength; i++) {
-      this.drawPile.push(this.discardPile.pop())
-    }
+    this.drawPile = this.drawPile.concat(this.discardPile)
+    this.discardPile = []
   }
 }
