@@ -1,5 +1,5 @@
 
-export class PersonalDeck{
+class PersonalDeck{
   constructor() {
     this.drawPile = []
     this.hand = []
@@ -8,13 +8,13 @@ export class PersonalDeck{
   }
 
   createStartingPile() {
-    const STARTING_COPPER_CARDS = 4
+    const STARTING_COPPER_CARDS = 7
     const STARTING_ESTATE_CARDS = 3
     for (let i = 1; i <= STARTING_COPPER_CARDS; i++) {
-      this.drawPile.push('copper')
+      this.drawPile.push('Copper')
     }
     for (let i = 1; i <= STARTING_ESTATE_CARDS; i++) {
-      this.drawPile.push('estate')
+      this.drawPile.push('Estate')
     }
     this.drawPile = this._shuffleCards(this.drawPile)
   }
@@ -30,6 +30,9 @@ export class PersonalDeck{
 
   drawHand() {
     const CARDS_PER_DRAW_HAND = 3
+    if (this.drawPile.length < CARDS_PER_DRAW_HAND) {
+      this.replinishDrawPile()
+    }
     for (let i = 1; i <= CARDS_PER_DRAW_HAND; i++) {
       this.drawCard()
       }
@@ -51,4 +54,9 @@ export class PersonalDeck{
     this.drawPile = this.drawPile.concat(this.discardPile)
     this.discardPile = []
   }
+
+
+
 }
+
+module.exports = PersonalDeck
