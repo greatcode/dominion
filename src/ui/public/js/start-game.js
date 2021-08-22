@@ -1,9 +1,5 @@
-import { PersonalDeck } from "./player-deck.js"
 
 const socket = io()
-
-const yourDeck = new PersonalDeck()
-
 
 const joinGameButton = document.getElementById('joinGameButton')
 const leaveWaitingRoomButton = document.getElementById('leaveWaitingRoom')
@@ -19,8 +15,6 @@ const you = document.getElementById('you')
 const yourDrawPile = document.getElementById('yourDrawPile')
 const yourHand = document.getElementById('yourHand')
 const yourDiscardPile = document.getElementById('yourDiscardPile')
-
-
 
 
 joinGameButton.addEventListener('click', addToQueue)
@@ -44,50 +38,15 @@ function exitWaitingRoom () {
 
 }
 
-function updateDrawPile (){
-  yourDrawPile.innerText = `Draw Pile: ${yourDeck.drawPile.length} cards`
-  socket.emit('drawPile', {
-    'emitPile': yourDeck.drawPile.length,
-    'room': gameRoom.innerText 
-  })
-}
-
-function updateHand () {
-  yourHand.innerText = `Your Hand: ${yourDeck.hand}`
-    socket.emit('currentHand', {
-      'emitHand': yourDeck.hand,
-      'room': gameRoom.innerText
-    })
-}
-
-function updateDiscardPile () {
-  yourDiscardPile.innerText = `Discard Pile: ${yourDeck.discardPile.length} cards`
-  socket.emit('discardPile', {
-    'emitDiscard' : yourDeck.discardPile.length,
-    'room': gameRoom.innerText
-  })
-}
 
 function toDiscardPile (){
-  yourDeck.discard()
-  updateDiscardPile()
-  updateHand()
+  socket.emit('discardHand', gameRoom.innerText)
   discardButton.style.display = 'none'
   drawHandButton.style.display = 'block'
 }
 
 function drawHand (){
-  const CARDS_NEEDED_TO_DRAWHAND = 3
-  if (yourDeck.drawPile.length < CARDS_NEEDED_TO_DRAWHAND) {
-    yourDeck.replinishDrawPile()
-    updateDrawPile()
-    updateDiscardPile()
-  }
-  for (let i = 1; i <= CARDS_NEEDED_TO_DRAWHAND; i++) {
-    yourDeck.drawCard()
-  }
-  updateHand()
-  updateDrawPile()
+  socket.emit('drawHand', gameRoom.innerText)
   discardButton.style.display = 'block'
   drawHandButton.style.display = 'none'
 }
@@ -97,27 +56,36 @@ socket.on('playerReady', (player) => {
 })
 
 socket.on('startingGame', (player) => {
-  you.innerText = `You: ${player.you}`
-  opponent.innerText = `Opponent: ${player.opponentId}`
+  you.innerText = `Monarch_${player.you}`
+  opponent.innerText = `Monarch_${player.opponentId}`
   gameRoom.innerText = `${player.room}`
   waiting.style.display = 'none'
   leaveWaitingRoomButton.style.display = 'none'
   drawHandButton.style.display = 'block'
-  yourDeck.createStartingPile()
-  updateDrawPile()
+  socket.emit('startingPile', gameRoom.innerText)
 })
 
+socket.on('drawPileUpdate', (pile) => {
+  yourDrawPile.innerText = `Draw Pile: ${pile} cards`
+})
 socket.on('opponentPile', (pile) => {
-  opponentDrawPile.innerText = `Opponent Draw Pile: ${pile.serveDrawPile} cards`
+  opponentDrawPile.innerText = `Opponent Draw Pile: ${pile} cards`
 })
 
+socket.on('handUpdate', (hand) => {
+  yourHand.innerText = `Your Hand: ${hand}`
+})
 socket.on('opponentHand', (hand) => {
-  opponentHand.innerText = `Opponent Hand: ${hand.serveHand}`
+  opponentHand.innerText = `Opponent Hand: ${hand}`
 })
 
-socket.on('opponentDiscard', (pile) => {
-  opponentDiscardPile.innerText = `Opponent Discard Pile: ${pile.serveDiscardPile} cards`
+socket.on('discardPileUpdate', (discardPile) => {
+  yourDiscardPile.innerText = `Discard Pile: ${discardPile} cards`
 })
+socket.on('opponentDiscard', (discardPile) => {
+  opponentDiscardPile.innerText = `Opponent Discard Pile: ${discardPile} cards`
+})
+
 
 socket.on('clearWaitingRoom', () => {
   waiting.innerText = ''

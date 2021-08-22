@@ -1,5 +1,9 @@
 //
 
+const path = require('path')
+const PersonalDeck = require(path.join(__dirname, './game/player-deck.js'))
+
+
 let waitingRooms = []
 let activeRooms = {}
 let room = 0
@@ -7,7 +11,25 @@ let room = 0
 function onConnection(socket) {
   console.log('A user connected')
 
-  
+  function updateDrawPile (roomNumber) {
+    socket.emit('drawPileUpdate', playerDeck.drawPile.length)
+    socket.to(roomNumber).emit('opponentPile', playerDeck.drawPile.length)
+  }
+
+  function updateHand (roomNumber) {
+    socket.emit('handUpdate', playerDeck.hand)
+    socket.to(roomNumber).emit('opponentHand', playerDeck.hand)
+  }
+
+  function updateDiscardPile (roomNumber) {
+    socket.emit('discardPileUpdate', playerDeck.discardPile.length)
+    socket.to(roomNumber).emit('opponentDiscard', playerDeck.discardPile.length)
+  }
+
+  // function updatePlayedCards (roomNumber) {
+  //   socket.emit('playedCardsUpdate', playerDeck.playedCards)
+
+  // }
 
   // Whenever someone disconnects this piece of code executes
   socket.on('disconnect', function () {
@@ -40,6 +62,7 @@ function onConnection(socket) {
             opponentId: opponent[0].id,
             room: gameRoom
           })
+        
         }
       }
       else {
@@ -54,19 +77,26 @@ function onConnection(socket) {
     socket.broadcast.emit('clearWaitingRoom')
   })
 
-  socket.on('drawPile', (pile) => {
-   socket.to(pile.room).emit('opponentPile', {'serveDrawPile': pile.emitPile})
+  socket.on('startingPile', (roomNumber) => {
+    playerDeck = new PersonalDeck()
+    playerDeck.createStartingPile()
+    updateDrawPile(roomNumber)
+    updateHand(roomNumber)
+    updateDiscardPile(roomNumber)
   })
 
-  socket.on('currentHand', (hand) => {
-    socket.to(hand.room).emit('opponentHand', {'serveHand': hand.emitHand})
+  socket.on('drawHand', (roomNumber) => {
+    playerDeck.drawHand()
+    updateDrawPile(roomNumber)
+    updateHand(roomNumber)
+    updateDiscardPile(roomNumber)
   })
 
-  socket.on('discardPile', (pile) => {
-    socket.to(pile.room).emit('opponentDiscard', {'serveDiscardPile': pile.emitDiscard})
+  socket.on('discardHand', (roomNumber) => {
+    playerDeck.discard()
+    updateHand(roomNumber)
+    updateDiscardPile(roomNumber)
   })
-
-
 
 }
 
