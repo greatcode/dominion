@@ -10,6 +10,7 @@ class PersonalDeck{
   createStartingPile() {
     const STARTING_COPPER_CARDS = 7
     const STARTING_ESTATE_CARDS = 3
+    console.log('start')
     for (let i = 1; i <= STARTING_COPPER_CARDS; i++) {
       this.drawPile.push('Copper')
     }

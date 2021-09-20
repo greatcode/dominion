@@ -11,25 +11,14 @@ let room = 0
 function onConnection(socket) {
   console.log('A user connected')
 
-  function updateDrawPile (roomNumber) {
-    socket.emit('drawPileUpdate', playerDeck.drawPile.length)
-    socket.to(roomNumber).emit('opponentPile', playerDeck.drawPile.length)
+  const playerDeck = new PersonalDeck()
+
+
+  function updatePlayerCards (roomNumber) {
+    socket.emit('updatePlayerCards', playerDeck)
+    socket.to(roomNumber).emit('updateOpponentCards', playerDeck)
+
   }
-
-  function updateHand (roomNumber) {
-    socket.emit('handUpdate', playerDeck.hand)
-    socket.to(roomNumber).emit('opponentHand', playerDeck.hand)
-  }
-
-  function updateDiscardPile (roomNumber) {
-    socket.emit('discardPileUpdate', playerDeck.discardPile.length)
-    socket.to(roomNumber).emit('opponentDiscard', playerDeck.discardPile.length)
-  }
-
-  // function updatePlayedCards (roomNumber) {
-  //   socket.emit('playedCardsUpdate', playerDeck.playedCards)
-
-  // }
 
   // Whenever someone disconnects this piece of code executes
   socket.on('disconnect', function () {
@@ -78,24 +67,20 @@ function onConnection(socket) {
   })
 
   socket.on('startingPile', (roomNumber) => {
-    playerDeck = new PersonalDeck()
+    
     playerDeck.createStartingPile()
-    updateDrawPile(roomNumber)
-    updateHand(roomNumber)
-    updateDiscardPile(roomNumber)
+    updatePlayerCards(roomNumber)
   })
 
   socket.on('drawHand', (roomNumber) => {
     playerDeck.drawHand()
-    updateDrawPile(roomNumber)
-    updateHand(roomNumber)
-    updateDiscardPile(roomNumber)
+    console.log(playerDeck.drawPile.length)
+    updatePlayerCards(roomNumber)
   })
 
   socket.on('discardHand', (roomNumber) => {
     playerDeck.discard()
-    updateHand(roomNumber)
-    updateDiscardPile(roomNumber)
+    updatePlayerCards(roomNumber)
   })
 
 }

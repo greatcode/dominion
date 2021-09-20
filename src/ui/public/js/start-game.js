@@ -65,25 +65,17 @@ socket.on('startingGame', (player) => {
   socket.emit('startingPile', gameRoom.innerText)
 })
 
-socket.on('drawPileUpdate', (pile) => {
-  yourDrawPile.innerText = `Draw Pile: ${pile} cards`
-})
-socket.on('opponentPile', (pile) => {
-  opponentDrawPile.innerText = `Opponent Draw Pile: ${pile} cards`
+
+socket.on('updatePlayerCards', (playerCards) => {
+  yourDrawPile.innerText = `Draw Pile: ${playerCards.drawPile.length} cards`
+  yourHand.innerText = `Your Hand: ${playerCards.hand}`
+  yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
 })
 
-socket.on('handUpdate', (hand) => {
-  yourHand.innerText = `Your Hand: ${hand}`
-})
-socket.on('opponentHand', (hand) => {
-  opponentHand.innerText = `Opponent Hand: ${hand}`
-})
-
-socket.on('discardPileUpdate', (discardPile) => {
-  yourDiscardPile.innerText = `Discard Pile: ${discardPile} cards`
-})
-socket.on('opponentDiscard', (discardPile) => {
-  opponentDiscardPile.innerText = `Opponent Discard Pile: ${discardPile} cards`
+socket.on('updateOpponentCards', (opponentCards) => {
+  opponentDrawPile.innerText = `Opponent Draw Pile: ${opponentCards.drawPile.length} cards`
+  opponentHand.innerText = `Opponent Hand: ${opponentCards.hand}`
+  opponentDiscardPile.innerText = `Opponent Discard Pile: ${opponentCards.discardPile.length} cards`
 })
 
 
