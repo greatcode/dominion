@@ -1,11 +1,36 @@
 //
 
 const path = require('path')
+const { report } = require('process')
 const PersonalDeck = require(path.join(__dirname, './game/player-deck.js'))
-
+const SupplyCards = require(path.join(__dirname, './game/supply-cards.js'))
 
 let waitingRooms = []
 let activeRooms = {}
+// [gameRoom] = [socket, socket]
+// [gameRoom] = { supply, players: [socket, socket] }
+let supplyRoom = {}
+// [gameRoom] = supply
+
+/**
+ * Room
+ *  Two Players
+ *  All Cards
+ *  Positioning of Cards
+ *  Value of cards in play
+ *  Game
+ *  Points / Score
+ *  
+ * [gameRoom] = {
+ *   game: {
+ *     players: [
+ *       {socket, cards}
+       ]
+ *     supply cards
+ *   }
+ * }
+ */
+
 let room = 0
 
 function onConnection(socket) {
@@ -13,11 +38,16 @@ function onConnection(socket) {
 
   const playerDeck = new PersonalDeck()
 
+  // myRoom = activeRooms.filter((room) => // socket.id room.game.players.contains...)
 
   function updatePlayerCards (roomNumber) {
     socket.emit('updatePlayerCards', playerDeck)
     socket.to(roomNumber).emit('updateOpponentCards', playerDeck)
+  }
 
+  function updateSupplyCards (roomNumber, supply) {
+    socket.emit('updateSupply', supply)
+    socket.to(roomNumber).emit('updateSupply', supply)
   }
 
   // Whenever someone disconnects this piece of code executes
@@ -33,7 +63,10 @@ function onConnection(socket) {
       if (waitingRooms.length >= PLAYERS_PER_GAME) {
         room++
         gameRoom = 'room' + room
-        activeRooms[gameRoom] = [waitingRooms.pop(), waitingRooms.pop()]
+        const supplyCards = new SupplyCards()
+        const supply = supplyCards;
+        const players = [waitingRooms.pop(), waitingRooms.pop()]
+        activeRooms[gameRoom] = {supply, players}
         if (waitingRooms.length == 0) {
           socket.broadcast.emit('clearWaitingRoom')
         }
@@ -42,17 +75,17 @@ function onConnection(socket) {
             player: waitingRooms[0].id
           })
         }
-        for (const i in activeRooms[gameRoom]) {
-          player = activeRooms[gameRoom][i]
-          opponent = activeRooms[gameRoom].filter(players => players != player)
+        for (const i in activeRooms[gameRoom].players) {
+          player = activeRooms[gameRoom].players[i]
+          opponent = activeRooms[gameRoom].players.filter(players => players != player)
           player.join(gameRoom)
           player.emit('startingGame', {
             you: player.id,
             opponentId: opponent[0].id,
             room: gameRoom
           })
-        
         }
+        updateSupplyCards(gameRoom, activeRooms[gameRoom].supply.supplyCards)
       }
       else {
         socket.broadcast.emit('playerReady', {player: socket.id})
@@ -74,7 +107,6 @@ function onConnection(socket) {
 
   socket.on('drawHand', (roomNumber) => {
     playerDeck.drawHand()
-    console.log(playerDeck.drawPile.length)
     updatePlayerCards(roomNumber)
   })
 
@@ -82,6 +114,7 @@ function onConnection(socket) {
     playerDeck.discard()
     updatePlayerCards(roomNumber)
   })
+
 
 }
 

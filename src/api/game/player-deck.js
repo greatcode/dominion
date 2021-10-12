@@ -7,15 +7,18 @@ class PersonalDeck{
     this.playedCards = []
   }
 
+
   createStartingPile() {
     const STARTING_COPPER_CARDS = 7
     const STARTING_ESTATE_CARDS = 3
     console.log('start')
+    const coins = ['Copper', 'coin']
+    const victoryCards = ['Estate', 'vc']
     for (let i = 1; i <= STARTING_COPPER_CARDS; i++) {
-      this.drawPile.push('Copper')
+      this.drawPile.push(coins)
     }
     for (let i = 1; i <= STARTING_ESTATE_CARDS; i++) {
-      this.drawPile.push('Estate')
+      this.drawPile.push(victoryCards)
     }
     this.drawPile = this._shuffleCards(this.drawPile)
   }
