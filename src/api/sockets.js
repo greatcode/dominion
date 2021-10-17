@@ -4,6 +4,7 @@ const path = require('path')
 const { report } = require('process')
 const PersonalDeck = require(path.join(__dirname, './game/player-deck.js'))
 const SupplyCards = require(path.join(__dirname, './game/supply-cards.js'))
+const CardsInPlay = require(path.join(__dirname, './game/cards-in-play.js'))
 
 let waitingRooms = []
 let activeRooms = {}
@@ -37,12 +38,19 @@ function onConnection(socket) {
   console.log('A user connected')
 
   const playerDeck = new PersonalDeck()
+  const cardsInPlay = new CardsInPlay()
 
   // myRoom = activeRooms.filter((room) => // socket.id room.game.players.contains...)
 
-  function updatePlayerCards (roomNumber) {
-    socket.emit('updatePlayerCards', playerDeck)
-    socket.to(roomNumber).emit('updateOpponentCards', playerDeck)
+  function updatePlayer (roomNumber) {
+    socket.emit('updatePlayer', {
+      playerCards: playerDeck,
+      playerPlay: cardsInPlay
+    })
+    socket.to(roomNumber).emit('updateOpponent', {
+      opponentCards: playerDeck,
+      opponentPlay: cardsInPlay
+    })
   }
 
   function updateSupplyCards (roomNumber, supply) {
@@ -102,17 +110,25 @@ function onConnection(socket) {
   socket.on('startingPile', (roomNumber) => {
     
     playerDeck.createStartingPile()
-    updatePlayerCards(roomNumber)
+    updatePlayer(roomNumber)
   })
-
+  
   socket.on('drawHand', (roomNumber) => {
     playerDeck.drawHand()
-    updatePlayerCards(roomNumber)
+    updatePlayer(roomNumber)
   })
 
   socket.on('discardHand', (roomNumber) => {
     playerDeck.discard()
-    updatePlayerCards(roomNumber)
+    cardsInPlay.resetTracker()
+    updatePlayer(roomNumber)
+  })
+
+  socket.on('playingCard', ({roomNumber, card_id}) => {
+    playerDeck.playCards(card_id)
+    cardsInPlay.updateTracker(playerDeck.playedCards)
+    updatePlayer(roomNumber)
+    
   })
 
 
