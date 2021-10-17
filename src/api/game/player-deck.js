@@ -12,8 +12,8 @@ class PersonalDeck{
     const STARTING_COPPER_CARDS = 7
     const STARTING_ESTATE_CARDS = 3
     console.log('start')
-    const coins = ['Copper', 'coin']
-    const victoryCards = ['Estate', 'vc']
+    const coins = ['Copper', 'coin', 1]
+    const victoryCards = ['Estate', 'vc', 1]
     for (let i = 1; i <= STARTING_COPPER_CARDS; i++) {
       this.drawPile.push(coins)
     }
@@ -51,6 +51,12 @@ class PersonalDeck{
     for (let i = 1; i <= discardPlayedCards; i++) {
       this.discardPile.push(this.playedCards.pop())
     }
+  }
+
+  playCards(card_place) {
+    this.playedCards.push(this.hand[card_place])
+    this.hand.splice(card_place, 1)
+
   }
 
   replinishDrawPile(){
