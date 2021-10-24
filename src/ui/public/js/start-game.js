@@ -3,7 +3,6 @@ const socket = io()
 
 const joinGameButton = document.getElementById('joinGameButton')
 const leaveWaitingRoomButton = document.getElementById('leaveWaitingRoom')
-const drawHandButton = document.getElementById('drawHandButton')
 const discardButton = document.getElementById('discardButton')
 const waiting = document.getElementById('waiting')
 const gameRoom = document.getElementById('gameRoom')
@@ -35,7 +34,6 @@ const supplyVictory = document.getElementById('supplyVictory')
 
 joinGameButton.addEventListener('click', addToQueue)
 leaveWaitingRoomButton.addEventListener('click', exitWaitingRoom)
-drawHandButton.addEventListener('click', drawHand)
 discardButton.addEventListener('click', toDiscardPile)
 
 const CARD_VALUES = {
@@ -71,18 +69,10 @@ function playCard (e) {
 function toDiscardPile (){
   socket.emit('discardHand', gameRoom.innerText)
   discardButton.style.display = 'none'
-  drawHandButton.style.display = 'block'
   yourPlayTracker.style.display = 'none'
   opponentPlayTracker.style.display = 'block'
 }
 
-function drawHand (){
-  socket.emit('drawHand', gameRoom.innerText)
-  discardButton.style.display = 'block'
-  drawHandButton.style.display = 'none'
-  yourPlayTracker.style.display = 'block'
-  opponentPlayTracker.style.display = 'none'
-}
 
 socket.on('playerReady', (player) => {
   waiting.innerText = `${player.player} is waiting to play`
@@ -94,45 +84,68 @@ socket.on('startingGame', (player) => {
   gameRoom.innerText = `${player.room}`
   waiting.style.display = 'none'
   leaveWaitingRoomButton.style.display = 'none'
-  drawHandButton.style.display = 'block'
+  let turn = player.playerTurn
   supply.style.display = 'block'
-  socket.emit('startingPile', gameRoom.innerText)
+  socket.emit('startingPile', 
+  { 
+    roomNumber: gameRoom.innerText,
+    startingTurn: turn
+  })
 })
 
 
-socket.on('updatePlayer', ({playerCards, playerPlay}) => {
+socket.on('updatePlayer', ({playerCards, playerTurn, playerPlay}) => {
   yourDrawPile.innerText = `Draw Pile: ${playerCards.drawPile.length} cards`
   yourHand.innerText = 'Your Hand:'
-  playerCards.hand.forEach((card, index) => {
-    if (card[CARD_VALUES.TYPE] == 'vc') {
+  if (playerTurn) {
+    discardButton.style.display = 'block'
+    playerCards.hand.forEach((card, index) => {
+      if (card[CARD_VALUES.TYPE] == 'vc') {
+        const cardElement = document.createElement('p')
+        cardElement.classList.add('playingCards')
+        cardElement.innerText = card[CARD_VALUES.NAME]
+        yourHand.append(cardElement)
+      }
+      else {
+        let div_num = String(index)
+        const cardElement = document.createElement('button')
+        cardElement.id = `${div_num}`
+        cardElement.classList.add('playingCards')
+        cardElement.innerText = card[CARD_VALUES.NAME]
+        cardElement.addEventListener('click', playCard)
+        yourHand.append(cardElement)
+      }
+    });
+    
+  }
+  else {
+    for (let card of playerCards.hand) {
+      const cardElement = document.createElement('p')
+        cardElement.classList.add('playingCards')
+        cardElement.innerText = card[CARD_VALUES.NAME]
+        yourHand.append(cardElement)
+    }
+  }
+
+  yourPlayingHand.innerText = `Played Cards:`
+    for (let card of playerCards.playedCards) {
       const cardElement = document.createElement('p')
       cardElement.classList.add('playingCards')
       cardElement.innerText = card[CARD_VALUES.NAME]
-      yourHand.append(cardElement)
+      yourPlayingHand.append(cardElement)
     }
-    else {
-      let div_num = String(index)
-      const cardElement = document.createElement('button')
-      cardElement.id = `${div_num}`
-      cardElement.classList.add('playingCards')
-      cardElement.innerText = card[CARD_VALUES.NAME]
-      cardElement.addEventListener('click', playCard)
-      yourHand.append(cardElement)
-    }
-  });
-  yourPlayingHand.innerText = `Played Cards:`
-  for (let card of playerCards.playedCards) {
-    const cardElement = document.createElement('p')
-    cardElement.classList.add('playingCards')
-    cardElement.innerText = card[CARD_VALUES.NAME]
-    yourPlayingHand.append(cardElement)
-  }
+
+  
   yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
   yourActionsAvailable.innerText = `Action: ${playerPlay.action}`
   yourBuysAvailable.innerText = `Buy: ${playerPlay.buy}`
   yourTreasure.innerText = `Treaure: ${playerPlay.treasure}`
 
   
+})
+
+socket.on('changeTurn', () => {
+  socket.emit('myTurn', gameRoom.innerText)
 })
 
 socket.on('updateOpponent', ({opponentCards, opponentPlay}) => {
