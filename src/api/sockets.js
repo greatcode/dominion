@@ -10,7 +10,6 @@ let waitingRooms = []
 let activeRooms = {}
 // [gameRoom] = [socket, socket]
 // [gameRoom] = { supply, players: [socket, socket] }
-let supplyRoom = {}
 // [gameRoom] = supply
 
 /**
@@ -42,21 +41,27 @@ function onConnection(socket) {
 
   // myRoom = activeRooms.filter((room) => // socket.id room.game.players.contains...)
 
-  function updatePlayer (roomNumber) {
+  function updatePlayer (roomNumber, turn) {
     socket.emit('updatePlayer', {
       playerCards: playerDeck,
-      playerPlay: cardsInPlay
+      playerTurn: turn,
+      playerPlay: cardsInPlay,
+
     })
     socket.to(roomNumber).emit('updateOpponent', {
       opponentCards: playerDeck,
       opponentPlay: cardsInPlay
     })
+    if (turn == false) {
+      socket.to(roomNumber).emit('changeTurn')
+    }
   }
 
   function updateSupplyCards (roomNumber, supply) {
     socket.emit('updateSupply', supply)
     socket.to(roomNumber).emit('updateSupply', supply)
   }
+
 
   // Whenever someone disconnects this piece of code executes
   socket.on('disconnect', function () {
@@ -83,16 +88,31 @@ function onConnection(socket) {
             player: waitingRooms[0].id
           })
         }
+        firstTurn = false
+        coinFlip = Math.floor(Math.random()*2)
+        console.log(`preif ${coinFlip}`)
+        if (coinFlip == 0) {
+          firstTurn = true
+        }
         for (const i in activeRooms[gameRoom].players) {
           player = activeRooms[gameRoom].players[i]
           opponent = activeRooms[gameRoom].players.filter(players => players != player)
           player.join(gameRoom)
+          if (i == 0){
+            turn = firstTurn
+          }
+          else {
+            turn = !firstTurn
+          }
+          console.log(`player ${i} turn ${turn}`)
           player.emit('startingGame', {
             you: player.id,
             opponentId: opponent[0].id,
+            playerTurn: turn,
             room: gameRoom
           })
         }
+
         updateSupplyCards(gameRoom, activeRooms[gameRoom].supply.supplyCards)
       }
       else {
@@ -107,29 +127,37 @@ function onConnection(socket) {
     socket.broadcast.emit('clearWaitingRoom')
   })
 
-  socket.on('startingPile', (roomNumber) => {
-    
+  socket.on('startingPile', ({roomNumber, startingTurn}) => {
     playerDeck.createStartingPile()
-    updatePlayer(roomNumber)
+    playerDeck.drawHand()
+    console.log(`socket ${startingTurn}`)
+    console.log(`socket room ${roomNumber}`)
+    updatePlayer(roomNumber, startingTurn)
   })
   
   socket.on('drawHand', (roomNumber) => {
     playerDeck.drawHand()
-    updatePlayer(roomNumber)
+    updatePlayer(roomNumber, true)
   })
 
   socket.on('discardHand', (roomNumber) => {
     playerDeck.discard()
     cardsInPlay.resetTracker()
-    updatePlayer(roomNumber)
+    playerDeck.drawHand()
+    updatePlayer(roomNumber, false)
   })
 
   socket.on('playingCard', ({roomNumber, card_id}) => {
     playerDeck.playCards(card_id)
     cardsInPlay.updateTracker(playerDeck.playedCards)
-    updatePlayer(roomNumber)
-    
+    updatePlayer(roomNumber, true)
   })
+
+  socket.on('myTurn', (roomNumber) => {
+    updatePlayer(roomNumber, true)
+  })
+
+
 
 
 }
