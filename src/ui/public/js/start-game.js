@@ -84,48 +84,48 @@ socket.on('startingGame', (player) => {
   gameRoom.innerText = `${player.room}`
   waiting.style.display = 'none'
   leaveWaitingRoomButton.style.display = 'none'
-  let turn = player.playerTurn
   supply.style.display = 'block'
-  socket.emit('startingPile', 
-  { 
-    roomNumber: gameRoom.innerText,
-    startingTurn: turn
-  })
+  socket.emit('startingPile', gameRoom.innerText)
+})
+
+socket.on('waitingPlayer', ({playerCards, playerPlay}) => {
+  yourHand.innerText = 'Your Hand:'
+  for (let card of playerCards.hand) {
+    const cardElement = document.createElement('p')
+      cardElement.classList.add('playingCards')
+      cardElement.innerText = card[CARD_VALUES.NAME]
+      yourHand.append(cardElement)
+  }
+  yourPlayingHand.innerText = `Played Cards:`
+  
+  yourPlayTracker.style.display = 'none'
+  opponentPlayTracker.style.display = 'block'
+  yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
 })
 
 
-socket.on('updatePlayer', ({playerCards, playerTurn, playerPlay}) => {
+socket.on('activePlayer', ({playerCards, playerPlay}) => {
   yourDrawPile.innerText = `Draw Pile: ${playerCards.drawPile.length} cards`
   yourHand.innerText = 'Your Hand:'
-  if (playerTurn) {
-    discardButton.style.display = 'block'
-    playerCards.hand.forEach((card, index) => {
-      if (card[CARD_VALUES.TYPE] == 'vc') {
-        const cardElement = document.createElement('p')
-        cardElement.classList.add('playingCards')
-        cardElement.innerText = card[CARD_VALUES.NAME]
-        yourHand.append(cardElement)
-      }
-      else {
-        let div_num = String(index)
-        const cardElement = document.createElement('button')
-        cardElement.id = `${div_num}`
-        cardElement.classList.add('playingCards')
-        cardElement.innerText = card[CARD_VALUES.NAME]
-        cardElement.addEventListener('click', playCard)
-        yourHand.append(cardElement)
-      }
-    });
-    
-  }
-  else {
-    for (let card of playerCards.hand) {
+
+  discardButton.style.display = 'block'
+  playerCards.hand.forEach((card, index) => {
+    if (card[CARD_VALUES.TYPE] == 'vc') {
       const cardElement = document.createElement('p')
-        cardElement.classList.add('playingCards')
-        cardElement.innerText = card[CARD_VALUES.NAME]
-        yourHand.append(cardElement)
+      cardElement.classList.add('playingCards')
+      cardElement.innerText = card[CARD_VALUES.NAME]
+      yourHand.append(cardElement)
     }
-  }
+    else {
+      let div_num = String(index)
+      const cardElement = document.createElement('button')
+      cardElement.id = `${div_num}`
+      cardElement.classList.add('playingCards')
+      cardElement.innerText = card[CARD_VALUES.NAME]
+      cardElement.addEventListener('click', playCard)
+      yourHand.append(cardElement)
+    }
+  });
 
   yourPlayingHand.innerText = `Played Cards:`
     for (let card of playerCards.playedCards) {
@@ -135,7 +135,8 @@ socket.on('updatePlayer', ({playerCards, playerTurn, playerPlay}) => {
       yourPlayingHand.append(cardElement)
     }
 
-  
+  yourPlayTracker.style.display = 'block'
+  opponentPlayTracker.style.display = 'none'
   yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
   yourActionsAvailable.innerText = `Action: ${playerPlay.action}`
   yourBuysAvailable.innerText = `Buy: ${playerPlay.buy}`

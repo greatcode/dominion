@@ -3,8 +3,9 @@
 const path = require('path')
 const { report } = require('process')
 const PersonalDeck = require(path.join(__dirname, './game/player-deck.js'))
-const SupplyCards = require(path.join(__dirname, './game/supply-cards.js'))
+// const SupplyCards = require(path.join(__dirname, './game/supply-cards.js'))
 const CardsInPlay = require(path.join(__dirname, './game/cards-in-play.js'))
+const Game = require(path.join(__dirname, './game/game.js'))
 
 let waitingRooms = []
 let activeRooms = {}
@@ -41,26 +42,33 @@ function onConnection(socket) {
 
   // myRoom = activeRooms.filter((room) => // socket.id room.game.players.contains...)
 
-  function updatePlayer (roomNumber, turn) {
-    socket.emit('updatePlayer', {
-      playerCards: playerDeck,
-      playerTurn: turn,
-      playerPlay: cardsInPlay,
-
-    })
+  function updatePlayer (roomNumber, turn=true) {
     socket.to(roomNumber).emit('updateOpponent', {
       opponentCards: playerDeck,
       opponentPlay: cardsInPlay
     })
-    if (turn == false) {
+
+    if (turn) {
+      socket.emit('activePlayer', {
+        playerCards: playerDeck,
+        playerPlay: cardsInPlay,
+
+      })
+    }
+    
+    else {
+      socket.emit('waitingPlayer', {
+        playerCards: playerDeck,
+        playerPlay: cardsInPlay,
+      })
       socket.to(roomNumber).emit('changeTurn')
     }
   }
 
-  function updateSupplyCards (roomNumber, supply) {
-    socket.emit('updateSupply', supply)
-    socket.to(roomNumber).emit('updateSupply', supply)
-  }
+  // function updateSupplyCards (roomNumber, supply) {
+  //   socket.emit('updateSupply', supply)
+  //   socket.to(roomNumber).emit('updateSupply', supply)
+  // }
 
 
   // Whenever someone disconnects this piece of code executes
@@ -76,10 +84,12 @@ function onConnection(socket) {
       if (waitingRooms.length >= PLAYERS_PER_GAME) {
         room++
         gameRoom = 'room' + room
-        const supplyCards = new SupplyCards()
-        const supply = supplyCards;
+        // const supplyCards = new SupplyCards()
+        // const supply = supplyCards;
         const players = [waitingRooms.pop(), waitingRooms.pop()]
-        activeRooms[gameRoom] = {supply, players}
+        activeRooms[gameRoom] = new Game(gameRoom, players)
+        activeGame = activeRooms[gameRoom]
+        console.log(`game_room: ${activeGame._room}`)
         if (waitingRooms.length == 0) {
           socket.broadcast.emit('clearWaitingRoom')
         }
@@ -88,32 +98,18 @@ function onConnection(socket) {
             player: waitingRooms[0].id
           })
         }
-        firstTurn = false
-        coinFlip = Math.floor(Math.random()*2)
-        console.log(`preif ${coinFlip}`)
-        if (coinFlip == 0) {
-          firstTurn = true
-        }
-        for (const i in activeRooms[gameRoom].players) {
-          player = activeRooms[gameRoom].players[i]
-          opponent = activeRooms[gameRoom].players.filter(players => players != player)
+        for (const i in activeGame._monarchs) {
+          player = activeGame._monarchs[i]
+          opponent = activeGame._monarchs.filter(players => players != player)
           player.join(gameRoom)
-          if (i == 0){
-            turn = firstTurn
-          }
-          else {
-            turn = !firstTurn
-          }
-          console.log(`player ${i} turn ${turn}`)
           player.emit('startingGame', {
             you: player.id,
             opponentId: opponent[0].id,
-            playerTurn: turn,
             room: gameRoom
           })
         }
 
-        updateSupplyCards(gameRoom, activeRooms[gameRoom].supply.supplyCards)
+        // updateSupplyCards(gameRoom, activeRooms[gameRoom].supply.supplyCards)
       }
       else {
         socket.broadcast.emit('playerReady', {player: socket.id})
@@ -127,17 +123,21 @@ function onConnection(socket) {
     socket.broadcast.emit('clearWaitingRoom')
   })
 
-  socket.on('startingPile', ({roomNumber, startingTurn}) => {
+  socket.on('startingPile', (roomNumber) => {
     playerDeck.createStartingPile()
     playerDeck.drawHand()
-    console.log(`socket ${startingTurn}`)
     console.log(`socket room ${roomNumber}`)
-    updatePlayer(roomNumber, startingTurn)
+    if (activeRooms[roomNumber].playingMonarch == socket) {
+      updatePlayer(roomNumber)
+    }
+    else {
+      updatePlayer(roomNumber, false)
+    }
   })
   
   socket.on('drawHand', (roomNumber) => {
     playerDeck.drawHand()
-    updatePlayer(roomNumber, true)
+    updatePlayer(roomNumber)
   })
 
   socket.on('discardHand', (roomNumber) => {
@@ -150,11 +150,11 @@ function onConnection(socket) {
   socket.on('playingCard', ({roomNumber, card_id}) => {
     playerDeck.playCards(card_id)
     cardsInPlay.updateTracker(playerDeck.playedCards)
-    updatePlayer(roomNumber, true)
+    updatePlayer(roomNumber)
   })
 
   socket.on('myTurn', (roomNumber) => {
-    updatePlayer(roomNumber, true)
+    updatePlayer(roomNumber)
   })
 
 
