@@ -20,6 +20,12 @@ class CardsInPlay{
    }
   }
 
+  updateBuy(adjustBuy, adjustTreasure=0) {
+    this.buy += adjustBuy
+    this.treasure += adjustTreasure
+  }
+  
+
 
 
   resetTracker(){

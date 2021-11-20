@@ -66,6 +66,16 @@ function playCard (e) {
   card_id: this.id})
 }
 
+function buyCard (e) {
+  console.log(`buying card: ${this.id}`)
+  socket.emit('buyingCard',
+  {
+    roomNumber: gameRoom.innerText,
+    card_id: this.id
+  }
+  )
+}
+
 function toDiscardPile (){
   socket.emit('discardHand', gameRoom.innerText)
   discardButton.style.display = 'none'
@@ -167,13 +177,45 @@ socket.on('updateOpponent', ({opponentCards, opponentPlay}) => {
   
 })
 
+socket.on('activeSupply', ({supply, treasure}) => {
+  console.log(`treasure: ${treasure}`)
+  supplyCoins.innerText = 'Coin Cards: '
+  for (const [key, value] of Object.entries(supply.coinCards)) {
+    if (value.cost <= treasure & value.amount > 0) {
+      console.log(`${key}: ${value.cost}, tr:${treasure}`)
+      const cardElement = document.createElement('button')
+      cardElement.id = `${key}`
+      cardElement.innerText = `
+      ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
+      cardElement.addEventListener('click', buyCard)
+      supplyCoins.append(cardElement)
+    }
+    else {
+      const cardElement = document.createElement('p')
+      cardElement.innerText = `
+      ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
+      supplyCoins.append(cardElement)
+    }
+    
+  }
+  supplyVictory.innerText = 'Victory Cards: '
+  for (const [key, value] of Object.entries(supply.victoryCards)) {
+    const cardElement = document.createElement('p')
+    cardElement.innerText = `
+    ${key}: amount:${value.amount}, value:${value.points}, cost:${value.cost}`
+    supplyVictory.append(cardElement)
+  }
+})
+
 socket.on('updateSupply', (supplyCards) => {
+  supplyCoins.innerText = 'Coin Cards: '
   for (const [key, value] of Object.entries(supplyCards.coinCards)) {
     const cardElement = document.createElement('p')
     cardElement.innerText = `
     ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
     supplyCoins.append(cardElement)
   }
+  supplyVictory.innerText = 'Victory Cards: '
   for (const [key, value] of Object.entries(supplyCards.victoryCards)) {
     const cardElement = document.createElement('p')
     cardElement.innerText = `
