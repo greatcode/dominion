@@ -53,6 +53,11 @@ class PersonalDeck{
     }
   }
 
+  purchaseCard(card) {
+    console.log(`purchaseCard: ${card}`)
+    this.discardPile.push(card)
+  }
+
   playCards(card_place) {
     this.playedCards.push(this.hand[card_place])
     this.hand.splice(card_place, 1)

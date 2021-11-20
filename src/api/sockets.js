@@ -61,14 +61,24 @@ function onConnection(socket) {
         playerCards: playerDeck,
         playerPlay: cardsInPlay,
       })
-      socket.to(roomNumber).emit('changeTurn')
     }
   }
 
-  // function updateSupplyCards (roomNumber, supply) {
-  //   socket.emit('updateSupply', supply)
-  //   socket.to(roomNumber).emit('updateSupply', supply)
-  // }
+  function updateSupplyCards (roomNumber, supply) {
+    console.log(`buy: ${cardsInPlay.buy}, socket: ${socket.id}`)
+    if (cardsInPlay.buy > 0) {
+      console.log('in cards in play')
+      socket.emit('activeSupply', {
+        supply: supply,
+        treasure: cardsInPlay.treasure
+      })
+    }
+    else {
+      socket.emit('updateSupply', supply)
+    }
+  
+    socket.to(roomNumber).emit('updateSupply', supply)
+  }
 
 
   // Whenever someone disconnects this piece of code executes
@@ -109,7 +119,7 @@ function onConnection(socket) {
           })
         }
 
-        // updateSupplyCards(gameRoom, activeRooms[gameRoom].supply.supplyCards)
+        // updateSupplyCards(gameRoom, activeGame.supply.supplyCards)
       }
       else {
         socket.broadcast.emit('playerReady', {player: socket.id})
@@ -129,6 +139,7 @@ function onConnection(socket) {
     console.log(`socket room ${roomNumber}`)
     if (activeRooms[roomNumber].playingMonarch == socket) {
       updatePlayer(roomNumber)
+      updateSupplyCards(roomNumber, activeRooms[roomNumber].supply.supplyCards)
     }
     else {
       updatePlayer(roomNumber, false)
@@ -145,16 +156,31 @@ function onConnection(socket) {
     cardsInPlay.resetTracker()
     playerDeck.drawHand()
     updatePlayer(roomNumber, false)
+    socket.to(roomNumber).emit('changeTurn')
   })
 
   socket.on('playingCard', ({roomNumber, card_id}) => {
     playerDeck.playCards(card_id)
     cardsInPlay.updateTracker(playerDeck.playedCards)
     updatePlayer(roomNumber)
+    updateSupplyCards(roomNumber, activeRooms[roomNumber].supply.supplyCards)
+  })
+
+  socket.on('buyingCard', ({roomNumber, card_id}) => {
+    decreaseBuy = -1
+    cardKey = activeRooms[roomNumber].supply.supplyCards.coinCards[card_id]
+    card = [card_id, cardKey.type, cardKey.value]
+    cardKey.amount -= 1
+    playerDeck.purchaseCard(card)
+    cardsInPlay.updateBuy(decreaseBuy, cardKey.cost*-1)
+    updatePlayer(roomNumber)
+    updateSupplyCards(roomNumber, activeRooms[roomNumber].supply.supplyCards)
   })
 
   socket.on('myTurn', (roomNumber) => {
     updatePlayer(roomNumber)
+    console.log(`myturn: ${socket.id}`)
+    updateSupplyCards(roomNumber, activeRooms[roomNumber].supply.supplyCards)
   })
 
 
