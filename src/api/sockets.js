@@ -9,6 +9,7 @@ const Game = require(path.join(__dirname, './game/game.js'))
 
 let waitingRooms = []
 let activeRooms = {}
+let socketGame = {}
 // [gameRoom] = [socket, socket]
 // [gameRoom] = { supply, players: [socket, socket] }
 // [gameRoom] = supply
@@ -117,6 +118,8 @@ function onConnection(socket) {
             opponentId: opponent[0].id,
             room: gameRoom
           })
+          socketGame[player.id] = gameRoom
+          console.log(`socketGame: ${socketGame[player.id]}`)
         }
 
         // updateSupplyCards(gameRoom, activeGame.supply.supplyCards)
@@ -133,54 +136,50 @@ function onConnection(socket) {
     socket.broadcast.emit('clearWaitingRoom')
   })
 
-  socket.on('startingPile', (roomNumber) => {
+  socket.on('startingPile', () => {
     playerDeck.createStartingPile()
     playerDeck.drawHand()
-    console.log(`socket room ${roomNumber}`)
-    if (activeRooms[roomNumber].playingMonarch == socket) {
-      updatePlayer(roomNumber)
-      updateSupplyCards(roomNumber, activeRooms[roomNumber].supply.supplyCards)
+    console.log(`socket room ${socketGame[socket.id]}`)
+    if (activeRooms[socketGame[socket.id]].playingMonarch == socket) {
+      updatePlayer(socketGame[socket.id])
+      updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
     }
     else {
-      updatePlayer(roomNumber, false)
+      updatePlayer(socketGame[socket.id], false)
     }
   })
   
-  socket.on('drawHand', (roomNumber) => {
-    playerDeck.drawHand()
-    updatePlayer(roomNumber)
-  })
 
-  socket.on('discardHand', (roomNumber) => {
+  socket.on('discardHand', () => {
     playerDeck.discard()
     cardsInPlay.resetTracker()
     playerDeck.drawHand()
-    updatePlayer(roomNumber, false)
-    socket.to(roomNumber).emit('changeTurn')
+    updatePlayer(socketGame[socket.id], false)
+    socket.to(socketGame[socket.id]).emit('changeTurn')
   })
 
-  socket.on('playingCard', ({roomNumber, card_id}) => {
+  socket.on('playingCard', (card_id) => {
     playerDeck.playCards(card_id)
     cardsInPlay.updateTracker(playerDeck.playedCards)
-    updatePlayer(roomNumber)
-    updateSupplyCards(roomNumber, activeRooms[roomNumber].supply.supplyCards)
+    updatePlayer(socketGame[socket.id])
+    updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
   })
 
-  socket.on('buyingCard', ({roomNumber, card_id}) => {
+  socket.on('buyingCard', (card_id) => {
     decreaseBuy = -1
-    cardKey = activeRooms[roomNumber].supply.supplyCards.coinCards[card_id]
+    cardKey = activeRooms[socketGame[socket.id]].supply.supplyCards.coinCards[card_id]
     card = [card_id, cardKey.type, cardKey.value]
     cardKey.amount -= 1
     playerDeck.purchaseCard(card)
     cardsInPlay.updateBuy(decreaseBuy, cardKey.cost*-1)
-    updatePlayer(roomNumber)
-    updateSupplyCards(roomNumber, activeRooms[roomNumber].supply.supplyCards)
+    updatePlayer(socketGame[socket.id])
+    updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
   })
 
-  socket.on('myTurn', (roomNumber) => {
-    updatePlayer(roomNumber)
+  socket.on('myTurn', () => {
+    updatePlayer(socketGame[socket.id])
     console.log(`myturn: ${socket.id}`)
-    updateSupplyCards(roomNumber, activeRooms[roomNumber].supply.supplyCards)
+    updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
   })
 
 
