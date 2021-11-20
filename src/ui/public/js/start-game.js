@@ -61,23 +61,16 @@ function exitWaitingRoom () {
 
 function playCard (e) {
   console.log(this.id)
-  socket.emit('playingCard', 
-  {roomNumber: gameRoom.innerText,
-  card_id: this.id})
+  socket.emit('playingCard', this.id)
 }
 
 function buyCard (e) {
   console.log(`buying card: ${this.id}`)
-  socket.emit('buyingCard',
-  {
-    roomNumber: gameRoom.innerText,
-    card_id: this.id
-  }
-  )
+  socket.emit('buyingCard', this.id)
 }
 
 function toDiscardPile (){
-  socket.emit('discardHand', gameRoom.innerText)
+  socket.emit('discardHand')
   discardButton.style.display = 'none'
   yourPlayTracker.style.display = 'none'
   opponentPlayTracker.style.display = 'block'
@@ -95,7 +88,7 @@ socket.on('startingGame', (player) => {
   waiting.style.display = 'none'
   leaveWaitingRoomButton.style.display = 'none'
   supply.style.display = 'block'
-  socket.emit('startingPile', gameRoom.innerText)
+  socket.emit('startingPile')
 })
 
 socket.on('waitingPlayer', ({playerCards, playerPlay}) => {
@@ -156,7 +149,7 @@ socket.on('activePlayer', ({playerCards, playerPlay}) => {
 })
 
 socket.on('changeTurn', () => {
-  socket.emit('myTurn', gameRoom.innerText)
+  socket.emit('myTurn')
 })
 
 socket.on('updateOpponent', ({opponentCards, opponentPlay}) => {
