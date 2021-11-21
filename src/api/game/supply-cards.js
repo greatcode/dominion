@@ -47,6 +47,19 @@ class SupplyCards{
           'value': 1,
           'type': 'coin'
         }
+      },
+      actionCards: {
+        'Smithy': {
+          'amount': 10,
+          'cost': 4,
+          'value': {
+            'card': 3,
+            'action': 0,
+            'buy': 0,
+            'treasure': 0
+          },
+          'type': 'action'
+        }
       }
     }
   }

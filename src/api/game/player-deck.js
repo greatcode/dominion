@@ -3,8 +3,14 @@ class PersonalDeck{
   constructor() {
     this.drawPile = []
     this.hand = []
+    this.actionInHand = false
     this.discardPile = []
     this.playedCards = []
+    this.CARD_VALUES = {
+      NAME: 0,
+      TYPE: 1,
+      VALUE: 2
+    }
   }
 
 
@@ -30,6 +36,9 @@ class PersonalDeck{
 
   drawCard() {
     this.hand.push(this.drawPile.pop())
+    if (!this.actionInHand) {
+      this.actionCheck()
+    }  
   }
 
   drawHand() {
@@ -42,6 +51,17 @@ class PersonalDeck{
       }
   }
 
+  actionCheck(){
+    console.log('actionCheck Ran')
+    for (let card of this.hand) {
+      console.log(card[this.CARD_VALUES.TYPE])
+      if (card[this.CARD_VALUES.TYPE] == 'action') {
+        this.actionInHand = true
+        console.log('action in Hand')
+      }
+    }
+  }
+
   discard() {
     let discardHand = this.hand.length
     let discardPlayedCards = this.playedCards.length
@@ -51,6 +71,7 @@ class PersonalDeck{
     for (let i = 1; i <= discardPlayedCards; i++) {
       this.discardPile.push(this.playedCards.pop())
     }
+    this.actionInHand = false
   }
 
   purchaseCard(card) {
@@ -59,9 +80,13 @@ class PersonalDeck{
   }
 
   playCards(card_place) {
-    this.playedCards.push(this.hand[card_place])
+    let playedCard = this.hand[card_place]
+    this.playedCards.push(playedCard)
+    if (playedCard[this.CARD_VALUES.TYPE] == 'action'){
+      this.actionInHand = false
+      this.actionCheck()
+    }
     this.hand.splice(card_place, 1)
-
   }
 
   replinishDrawPile(){

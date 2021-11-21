@@ -174,6 +174,9 @@ function onConnection(socket) {
     else if(Object.keys(supplyCheck.victoryCards).includes(card_id)){
       cardKey = supplyCheck.victoryCards[card_id]
     }
+    else if(Object.keys(supplyCheck.actionCards).includes(card_id)){
+      cardKey = supplyCheck.actionCards[card_id]
+    }
     card = [card_id, cardKey.type, cardKey.value]
     cardKey.amount -= 1
     console.log(`cardkey: value:${cardKey.value} cost:${cardKey.cost}`)
