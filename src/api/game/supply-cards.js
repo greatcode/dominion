@@ -6,25 +6,25 @@ class SupplyCards{
         'Provice': {
           'amount': 8,
           'cost': 8,
-          'points': 6,
+          'value': 6,
           'type': 'vc'
         },
         'Duchy': {
           'amount': 8,
           'cost': 5,
-          'points': 3,
+          'value': 3,
           'type': 'vc'
         },
         'Estate': {
           'amount': 8,
           'cost': 2,
-          'points': 1,
+          'value': 1,
           'type': 'vc'
         },
         'Curse': {
           'amount': 10,
           'cost': 0,
-          'points': -1,
+          'value': -1,
           'type': 'vc'
         }
       },
@@ -46,6 +46,19 @@ class SupplyCards{
           'cost': 0,
           'value': 1,
           'type': 'coin'
+        }
+      },
+      actionCards: {
+        'Smithy': {
+          'amount': 10,
+          'cost': 4,
+          'value': {
+            'card': 3,
+            'action': 0,
+            'buy': 0,
+            'treasure': 0
+          },
+          'type': 'action'
         }
       }
     }

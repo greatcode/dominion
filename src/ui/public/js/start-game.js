@@ -27,6 +27,7 @@ const yourTreasure = document.getElementById('yourTreasure')
 const supply = document.getElementById('supply')
 const supplyCoins = document.getElementById('supplyCoins')
 const supplyVictory = document.getElementById('supplyVictory')
+const supplyAction = document.getElementById('supplyAction')
 
 
 
@@ -76,6 +77,23 @@ function toDiscardPile (){
   opponentPlayTracker.style.display = 'block'
 }
 
+function activeCardHand({divNum, cardName}){
+  console.log(`divNum: ${divNum}, card:${cardName}`)
+  const cardElement = document.createElement('button')
+      cardElement.id = `${divNum}`
+      cardElement.classList.add('playingCards')
+      cardElement.innerText = cardName
+      cardElement.addEventListener('click', playCard)
+      yourHand.append(cardElement)
+}
+
+function inactiveCardHand (cardName){
+  const cardElement = document.createElement('p')
+      cardElement.classList.add('playingCards')
+      cardElement.innerText = cardName
+      yourHand.append(cardElement)
+}
+
 
 socket.on('playerReady', (player) => {
   waiting.innerText = `${player.player} is waiting to play`
@@ -94,10 +112,7 @@ socket.on('startingGame', (player) => {
 socket.on('waitingPlayer', ({playerCards, playerPlay}) => {
   yourHand.innerText = 'Your Hand:'
   for (let card of playerCards.hand) {
-    const cardElement = document.createElement('p')
-      cardElement.classList.add('playingCards')
-      cardElement.innerText = card[CARD_VALUES.NAME]
-      yourHand.append(cardElement)
+    inactiveCardHand(card[CARD_VALUES.NAME])
   }
   yourPlayingHand.innerText = `Played Cards:`
   
@@ -112,21 +127,32 @@ socket.on('activePlayer', ({playerCards, playerPlay}) => {
   yourHand.innerText = 'Your Hand:'
 
   discardButton.style.display = 'block'
+  console.log(`action: ${playerPlay.action}, inHand:${playerCards.actionInHand}`)
   playerCards.hand.forEach((card, index) => {
-    if (card[CARD_VALUES.TYPE] == 'vc') {
-      const cardElement = document.createElement('p')
-      cardElement.classList.add('playingCards')
-      cardElement.innerText = card[CARD_VALUES.NAME]
-      yourHand.append(cardElement)
+    if(playerPlay.action && playerCards.actionInHand) {
+      if (card[CARD_VALUES.TYPE] == 'action'){
+        activeCardHand({
+          divNum: String(index), 
+          cardName: card[CARD_VALUES.NAME]
+       })
+      }
+      else{
+        inactiveCardHand(card[CARD_VALUES.NAME])
+      }
+    }
+    else if(playerPlay.buy) {
+      if (card[CARD_VALUES.TYPE] == 'coin'){
+        activeCardHand({
+          divNum: String(index), 
+          cardName: card[CARD_VALUES.NAME]
+       })
+      }
+      else {
+        inactiveCardHand(card[CARD_VALUES.NAME])
+      }
     }
     else {
-      let div_num = String(index)
-      const cardElement = document.createElement('button')
-      cardElement.id = `${div_num}`
-      cardElement.classList.add('playingCards')
-      cardElement.innerText = card[CARD_VALUES.NAME]
-      cardElement.addEventListener('click', playCard)
-      yourHand.append(cardElement)
+      inactiveCardHand(card[CARD_VALUES.NAME])
     }
   });
 
@@ -193,10 +219,44 @@ socket.on('activeSupply', ({supply, treasure}) => {
   }
   supplyVictory.innerText = 'Victory Cards: '
   for (const [key, value] of Object.entries(supply.victoryCards)) {
-    const cardElement = document.createElement('p')
-    cardElement.innerText = `
-    ${key}: amount:${value.amount}, value:${value.points}, cost:${value.cost}`
-    supplyVictory.append(cardElement)
+    if (value.cost <= treasure & value.amount > 0) {
+      console.log(`${key}: ${value.cost}, tr:${treasure}`)
+      const cardElement = document.createElement('button')
+      cardElement.id = `${key}`
+      cardElement.innerText = `
+      ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
+      cardElement.addEventListener('click', buyCard)
+      supplyVictory.append(cardElement)
+    }
+    else {
+      const cardElement = document.createElement('p')
+      cardElement.innerText = `
+      ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
+      supplyVictory.append(cardElement)
+    }
+  }
+  supplyAction.innerText = 'Action Cards: '
+  for (const [key, value] of Object.entries(supply.actionCards)) {
+    let actions = []
+    for (const [actionKey, actionValue] of Object.entries(value.value)) {
+      if (actionValue != 0){
+        actions.push(`${actionKey}:${actionValue} `)
+      }
+    }
+    if (value.cost <= treasure & value.amount > 0) {
+      const cardElement = document.createElement('button')
+      cardElement.id = `${key}`
+      cardElement.innerText = `
+      ${key}: amount:${value.amount}, action: ${actions}, cost:${value.cost}`
+      cardElement.addEventListener('click', buyCard)
+      supplyAction.append(cardElement)
+    }
+    else{
+      const cardElement = document.createElement('p')
+      cardElement.innerText = `
+      ${key}: amount:${value.amount}, action: ${actions}, cost:${value.cost}`
+      supplyAction.append(cardElement)
+    }
   }
 })
 
@@ -212,8 +272,21 @@ socket.on('updateSupply', (supplyCards) => {
   for (const [key, value] of Object.entries(supplyCards.victoryCards)) {
     const cardElement = document.createElement('p')
     cardElement.innerText = `
-    ${key}: amount:${value.amount}, value:${value.points}, cost:${value.cost}`
+    ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
     supplyVictory.append(cardElement)
+  }
+  supplyAction.innerText = 'Action Cards: '
+  for (const [key, value] of Object.entries(supplyCards.actionCards)) {
+    let actions = []
+    for (const [actionKey, actionValue] of Object.entries(value.value)) {
+      if (actionValue != 0){
+        actions.push(`${actionKey}:${actionValue} `)
+      }
+    }
+    const cardElement = document.createElement('p')
+    cardElement.innerText = `
+    ${key}: amount:${value.amount}, action: ${actions}, cost:${value.cost}`
+    supplyAction.append(cardElement)
   }
 
 })
