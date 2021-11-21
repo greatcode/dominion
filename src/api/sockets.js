@@ -167,9 +167,16 @@ function onConnection(socket) {
 
   socket.on('buyingCard', (card_id) => {
     decreaseBuy = -1
-    cardKey = activeRooms[socketGame[socket.id]].supply.supplyCards.coinCards[card_id]
+    const supplyCheck = activeRooms[socketGame[socket.id]].supply.supplyCards
+    if (Object.keys(supplyCheck.coinCards).includes(card_id)) {
+      cardKey = supplyCheck.coinCards[card_id]
+    }
+    else if(Object.keys(supplyCheck.victoryCards).includes(card_id)){
+      cardKey = supplyCheck.victoryCards[card_id]
+    }
     card = [card_id, cardKey.type, cardKey.value]
     cardKey.amount -= 1
+    console.log(`cardkey: value:${cardKey.value} cost:${cardKey.cost}`)
     playerDeck.purchaseCard(card)
     cardsInPlay.updateBuy(decreaseBuy, cardKey.cost*-1)
     updatePlayer(socketGame[socket.id])

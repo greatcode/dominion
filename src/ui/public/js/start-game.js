@@ -193,10 +193,21 @@ socket.on('activeSupply', ({supply, treasure}) => {
   }
   supplyVictory.innerText = 'Victory Cards: '
   for (const [key, value] of Object.entries(supply.victoryCards)) {
-    const cardElement = document.createElement('p')
-    cardElement.innerText = `
-    ${key}: amount:${value.amount}, value:${value.points}, cost:${value.cost}`
-    supplyVictory.append(cardElement)
+    if (value.cost <= treasure & value.amount > 0) {
+      console.log(`${key}: ${value.cost}, tr:${treasure}`)
+      const cardElement = document.createElement('button')
+      cardElement.id = `${key}`
+      cardElement.innerText = `
+      ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
+      cardElement.addEventListener('click', buyCard)
+      supplyVictory.append(cardElement)
+    }
+    else {
+      const cardElement = document.createElement('p')
+      cardElement.innerText = `
+      ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
+      supplyVictory.append(cardElement)
+    }
   }
 })
 
@@ -212,7 +223,7 @@ socket.on('updateSupply', (supplyCards) => {
   for (const [key, value] of Object.entries(supplyCards.victoryCards)) {
     const cardElement = document.createElement('p')
     cardElement.innerText = `
-    ${key}: amount:${value.amount}, value:${value.points}, cost:${value.cost}`
+    ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
     supplyVictory.append(cardElement)
   }
 
