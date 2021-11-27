@@ -61,12 +61,10 @@ function exitWaitingRoom () {
 }
 
 function playCard (e) {
-  console.log(this.id)
   socket.emit('playingCard', this.id)
 }
 
 function buyCard (e) {
-  console.log(`buying card: ${this.id}`)
   socket.emit('buyingCard', this.id)
 }
 
@@ -78,7 +76,6 @@ function toDiscardPile (){
 }
 
 function activeCardHand({divNum, cardName}){
-  console.log(`divNum: ${divNum}, card:${cardName}`)
   const cardElement = document.createElement('button')
       cardElement.id = `${divNum}`
       cardElement.classList.add('playingCards')
@@ -197,11 +194,10 @@ socket.on('updateOpponent', ({opponentCards, opponentPlay}) => {
 })
 
 socket.on('activeSupply', ({supply, treasure}) => {
-  console.log(`treasure: ${treasure}`)
   supplyCoins.innerText = 'Coin Cards: '
   for (const [key, value] of Object.entries(supply.coinCards)) {
     if (value.cost <= treasure & value.amount > 0) {
-      console.log(`${key}: ${value.cost}, tr:${treasure}`)
+      // console.log(`${key}: ${value.cost}, tr:${treasure}`)
       const cardElement = document.createElement('button')
       cardElement.id = `${key}`
       cardElement.innerText = `
@@ -220,7 +216,7 @@ socket.on('activeSupply', ({supply, treasure}) => {
   supplyVictory.innerText = 'Victory Cards: '
   for (const [key, value] of Object.entries(supply.victoryCards)) {
     if (value.cost <= treasure & value.amount > 0) {
-      console.log(`${key}: ${value.cost}, tr:${treasure}`)
+      // console.log(`${key}: ${value.cost}, tr:${treasure}`)
       const cardElement = document.createElement('button')
       cardElement.id = `${key}`
       cardElement.innerText = `

@@ -35,6 +35,12 @@ let socketGame = {}
 
 let room = 0
 
+const CARD_VALUES = {
+  NAME: 0,
+  TYPE: 1,
+  VALUE: 2,
+}
+
 function onConnection(socket) {
   console.log('A user connected')
 
@@ -119,7 +125,6 @@ function onConnection(socket) {
             room: gameRoom
           })
           socketGame[player.id] = gameRoom
-          console.log(`socketGame: ${socketGame[player.id]}`)
         }
 
         // updateSupplyCards(gameRoom, activeGame.supply.supplyCards)
@@ -139,7 +144,6 @@ function onConnection(socket) {
   socket.on('startingPile', () => {
     playerDeck.createStartingPile()
     playerDeck.drawHand()
-    console.log(`socket room ${socketGame[socket.id]}`)
     if (activeRooms[socketGame[socket.id]].playingMonarch == socket) {
       updatePlayer(socketGame[socket.id])
       updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
@@ -160,7 +164,23 @@ function onConnection(socket) {
 
   socket.on('playingCard', (card_id) => {
     playerDeck.playCards(card_id)
-    cardsInPlay.updateTracker(playerDeck.playedCards)
+    lastCard = playerDeck.playedCards.length - 1
+    const playedCard = playerDeck.playedCards[lastCard]
+    const actionCheck = activeRooms[socketGame[socket.id]].supply.supplyCards.actionCards
+    if (Object.keys(actionCheck).includes(playedCard[CARD_VALUES.NAME])) {
+      console.log('in ActionCheck')
+      const cardValues = playedCard[CARD_VALUES.VALUE]
+      cardsInPlay.actionPlayed(cardValues)
+      if (cardValues.card > 0){
+        for(let i=1; i <= cardValues.card; i++) {
+          playerDeck.drawCard()
+        }
+      }
+    }
+    else {
+      cardsInPlay.treasurePlayed(playerDeck.playedCards)
+    }
+
     updatePlayer(socketGame[socket.id])
     updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
   })
@@ -179,7 +199,6 @@ function onConnection(socket) {
     }
     card = [card_id, cardKey.type, cardKey.value]
     cardKey.amount -= 1
-    console.log(`cardkey: value:${cardKey.value} cost:${cardKey.cost}`)
     playerDeck.purchaseCard(card)
     cardsInPlay.updateBuy(decreaseBuy, cardKey.cost*-1)
     updatePlayer(socketGame[socket.id])
@@ -188,7 +207,6 @@ function onConnection(socket) {
 
   socket.on('myTurn', () => {
     updatePlayer(socketGame[socket.id])
-    console.log(`myturn: ${socket.id}`)
     updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
   })
 
