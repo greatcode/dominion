@@ -11,17 +11,20 @@ class CardsInPlay{
     }
   }
 
-  updateTracker(cards) {
+  treasurePlayed(cards) {
     this.treasure = 0
-    const lastPlayedCard = cards.length -1
    for (let card of cards) {
      if(card[this.CARD_VALUES.TYPE] == 'coin') {
        this.treasure += card[2]
      }
    }
-   if(cards[lastPlayedCard][this.CARD_VALUES.TYPE] == 'action'){
-     this.action += -1
-   }
+  }
+
+  actionPlayed(actionCardValues){
+    this.action += -1
+    this.action += actionCardValues.action
+    this.buy += actionCardValues.buy
+    this.treasure += actionCardValues.treasure
   }
 
   updateBuy(adjustBuy, adjustTreasure=0) {

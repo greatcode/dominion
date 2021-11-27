@@ -17,7 +17,6 @@ class PersonalDeck{
   createStartingPile() {
     const STARTING_COPPER_CARDS = 7
     const STARTING_ESTATE_CARDS = 3
-    console.log('start')
     const coins = ['Copper', 'coin', 1]
     const victoryCards = ['Estate', 'vc', 1]
     for (let i = 1; i <= STARTING_COPPER_CARDS; i++) {
@@ -35,6 +34,10 @@ class PersonalDeck{
   }
 
   drawCard() {
+    const OUT_OF_CARDS = 0
+    if (this.drawPile == OUT_OF_CARDS) {
+      this.replinishDrawPile()
+    }
     this.hand.push(this.drawPile.pop())
     if (!this.actionInHand) {
       this.actionCheck()
@@ -42,7 +45,7 @@ class PersonalDeck{
   }
 
   drawHand() {
-    const CARDS_PER_DRAW_HAND = 3
+    const CARDS_PER_DRAW_HAND = 5
     if (this.drawPile.length < CARDS_PER_DRAW_HAND) {
       this.replinishDrawPile()
     }
@@ -53,6 +56,7 @@ class PersonalDeck{
 
   actionCheck(){
     console.log('actionCheck Ran')
+    this.actionInHand = false
     for (let card of this.hand) {
       console.log(card[this.CARD_VALUES.TYPE])
       if (card[this.CARD_VALUES.TYPE] == 'action') {
@@ -75,18 +79,18 @@ class PersonalDeck{
   }
 
   purchaseCard(card) {
-    console.log(`purchaseCard: ${card}`)
     this.discardPile.push(card)
   }
 
   playCards(card_place) {
     let playedCard = this.hand[card_place]
     this.playedCards.push(playedCard)
-    if (playedCard[this.CARD_VALUES.TYPE] == 'action'){
-      this.actionInHand = false
+    this.hand.splice(card_place, 1)
+    let lastcard = this.playedCards.length -1
+    console.log(`played card:${this.playedCards[lastcard][1]}`)
+    if (this.playedCards[lastcard][this.CARD_VALUES.TYPE] == 'action'){
       this.actionCheck()
     }
-    this.hand.splice(card_place, 1)
   }
 
   replinishDrawPile(){
