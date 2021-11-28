@@ -4,6 +4,7 @@ const socket = io()
 const joinGameButton = document.getElementById('joinGameButton')
 const leaveWaitingRoomButton = document.getElementById('leaveWaitingRoom')
 const discardButton = document.getElementById('discardButton')
+const finishDiscardButton = document.getElementById('finishDiscardButton')
 const waiting = document.getElementById('waiting')
 const gameRoom = document.getElementById('gameRoom')
 const opponent = document.getElementById('opponent')
@@ -36,6 +37,7 @@ const supplyAction = document.getElementById('supplyAction')
 joinGameButton.addEventListener('click', addToQueue)
 leaveWaitingRoomButton.addEventListener('click', exitWaitingRoom)
 discardButton.addEventListener('click', toDiscardPile)
+finishDiscardButton.addEventListener('click', finishSelectDiscard)
 
 const CARD_VALUES = {
   NAME: 0,
@@ -68,11 +70,30 @@ function buyCard (e) {
   socket.emit('buyingCard', this.id)
 }
 
+function discardCard (e) {
+  socket.emit('discardSelectedCards', this.id)
+}
+
 function toDiscardPile (){
   socket.emit('discardHand')
   discardButton.style.display = 'none'
   yourPlayTracker.style.display = 'none'
   opponentPlayTracker.style.display = 'block'
+}
+
+function finishSelectDiscard (){
+  socket.emit('finishDiscard')
+  finishDiscardButton.style.display = 'none'
+}
+
+function selectToDiscard({divNum, cardName}){
+  const cardElement = document.createElement('button')
+  cardElement.id = `${divNum}`
+  cardElement.classList.add('playingCards')
+  cardElement.innerText = cardName
+  cardElement.addEventListener('click', discardCard)
+  yourHand.append(cardElement)
+
 }
 
 function activeCardHand({divNum, cardName}){
@@ -116,6 +137,28 @@ socket.on('waitingPlayer', ({playerCards, playerPlay}) => {
   yourPlayTracker.style.display = 'none'
   opponentPlayTracker.style.display = 'block'
   yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
+})
+
+socket.on('selectCardsToDiscard', ({playerCards, playerPlay}) => {
+  discardButton.style.display = 'none'
+  finishDiscardButton.style.display = 'block'
+  yourHand.innerText = 'Select Cards to Discard:'
+  playerCards.hand.forEach((card, index) => {
+    selectToDiscard({
+      divNum: String(index),
+      cardName: card[CARD_VALUES.NAME]
+    })
+  })
+  yourPlayingHand.innerText = `Played Cards:`
+    for (let card of playerCards.playedCards) {
+      const cardElement = document.createElement('p')
+      cardElement.classList.add('playingCards')
+      cardElement.innerText = card[CARD_VALUES.NAME]
+      yourPlayingHand.append(cardElement)
+    }
+    
+  yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
+  yourActionsAvailable.innerText = `Action: ${playerPlay.action}`
 })
 
 

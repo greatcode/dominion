@@ -46,6 +46,8 @@ function onConnection(socket) {
 
   const playerDeck = new PersonalDeck()
   const cardsInPlay = new CardsInPlay()
+  let redrawCards = false
+  let cardsBeforeDiscard = 0
 
   // myRoom = activeRooms.filter((room) => // socket.id room.game.players.contains...)
 
@@ -86,6 +88,15 @@ function onConnection(socket) {
   
     socket.to(roomNumber).emit('updateSupply', supply)
   }
+
+  function selectToDiscard() {
+    socket.emit('selectCardsToDiscard', {
+      playerCards: playerDeck,
+      playerPlay: cardsInPlay,
+    })
+  }
+
+
 
 
   // Whenever someone disconnects this piece of code executes
@@ -162,13 +173,32 @@ function onConnection(socket) {
     socket.to(socketGame[socket.id]).emit('changeTurn')
   })
 
+  socket.on('discardSelectedCards', (card_id) => {
+    playerDeck.selectDiscard(card_id)
+    selectToDiscard()
+  })
+
+  socket.on('finishDiscard', () => {
+    if(redrawCards) {
+      cardsToDraw = cardsBeforeDiscard - playerDeck.hand.length
+      for (let i = 1; i <= cardsToDraw; i++) {
+        playerDeck.drawCard()
+      }
+      redrawCards = false
+      cardsBeforeDiscard = 0
+      updatePlayer(socketGame[socket.id])
+    }
+  })
+
+
+
   socket.on('playingCard', (card_id) => {
     playerDeck.playCards(card_id)
     lastCard = playerDeck.playedCards.length - 1
     const playedCard = playerDeck.playedCards[lastCard]
     const actionCheck = activeRooms[socketGame[socket.id]].supply.supplyCards.actionCards
     if (Object.keys(actionCheck).includes(playedCard[CARD_VALUES.NAME])) {
-      console.log('in ActionCheck')
+      console.log(`ActionCheck: ${playedCard[CARD_VALUES.NAME]}`)
       const cardValues = playedCard[CARD_VALUES.VALUE]
       cardsInPlay.actionPlayed(cardValues)
       if (cardValues.card > 0){
@@ -176,13 +206,22 @@ function onConnection(socket) {
           playerDeck.drawCard()
         }
       }
+      if(playedCard[CARD_VALUES.NAME] == 'Cellar'){
+        cardsBeforeDiscard = playerDeck.hand.length
+        redrawCards = true
+        selectToDiscard()
+        
+      }
+      else {
+        updatePlayer(socketGame[socket.id])
+        updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
+      }
     }
     else {
-      cardsInPlay.treasurePlayed(playerDeck.playedCards)
+      cardsInPlay.treasurePlayed(playedCard[CARD_VALUES.VALUE])
+      updatePlayer(socketGame[socket.id])
+      updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
     }
-
-    updatePlayer(socketGame[socket.id])
-    updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
   })
 
   socket.on('buyingCard', (card_id) => {
