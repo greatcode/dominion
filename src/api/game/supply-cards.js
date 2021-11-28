@@ -49,6 +49,17 @@ class SupplyCards{
         }
       },
       actionCards: {
+        'Cellar': {
+          'amount': 10,
+          'cost': 2,
+          'value': {
+            'card': 0,
+            'action': 1,
+            'buy': 0,
+            'treasure': 0
+          },
+          'type': 'action'
+        },
         'Smithy': {
           'amount': 10,
           'cost': 4,
@@ -59,7 +70,19 @@ class SupplyCards{
             'treasure': 0
           },
           'type': 'action'
-        }
+        },
+        'Market': {
+          'amount': 10,
+          'cost': 5,
+          'value': {
+            'card': 1,
+            'action': 1,
+            'buy': 1,
+            'treasure': 1
+          },
+          'type': 'action'
+        },
+        
       }
     }
   }

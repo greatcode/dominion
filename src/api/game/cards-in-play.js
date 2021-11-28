@@ -11,13 +11,8 @@ class CardsInPlay{
     }
   }
 
-  treasurePlayed(cards) {
-    this.treasure = 0
-   for (let card of cards) {
-     if(card[this.CARD_VALUES.TYPE] == 'coin') {
-       this.treasure += card[2]
-     }
-   }
+  treasurePlayed(cardValue) {
+    this.treasure += cardValue
   }
 
   actionPlayed(actionCardValues){

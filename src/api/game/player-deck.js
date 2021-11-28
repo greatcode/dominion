@@ -93,6 +93,13 @@ class PersonalDeck{
     }
   }
 
+  selectDiscard(card_place) {
+    let discardedCard = this.hand[card_place]
+    this.discardPile.push(discardedCard)
+    this.hand.splice(card_place, 1)
+    this.actionCheck()
+  }
+
   replinishDrawPile(){
     this.discardPile = this._shuffleCards(this.discardPile)
     this.drawPile = this.drawPile.concat(this.discardPile)
