@@ -4,8 +4,10 @@ const path = require('path')
 const { report } = require('process')
 const PersonalDeck = require(path.join(__dirname, './game/player-deck.js'))
 // const SupplyCards = require(path.join(__dirname, './game/supply-cards.js'))
-const CardsInPlay = require(path.join(__dirname, './game/cards-in-play.js'))
 const Game = require(path.join(__dirname, './game/game.js'))
+const CardsInPlay = require(path.join(__dirname, './game/cards-in-play.js'))
+const ActionHandler = require(path.join(__dirname, './game/action.js'))
+
 
 let waitingRooms = []
 let activeRooms = {}
@@ -46,8 +48,7 @@ function onConnection(socket) {
 
   const playerDeck = new PersonalDeck()
   const cardsInPlay = new CardsInPlay()
-  let redrawCards = false
-  let cardsBeforeDiscard = 0
+  const actionHandler = new ActionHandler()
 
   // myRoom = activeRooms.filter((room) => // socket.id room.game.players.contains...)
 
@@ -89,10 +90,22 @@ function onConnection(socket) {
     socket.to(roomNumber).emit('updateSupply', supply)
   }
 
+  function deactivateSupply(roomNumber, supply) {
+    socket.emit('updateSupply', supply)
+    socket.to(roomNumber).emit('updateSupply', supply)
+  }
+
   function selectToDiscard() {
     socket.emit('selectCardsToDiscard', {
       playerCards: playerDeck,
       playerPlay: cardsInPlay,
+    })
+  }
+
+  function attackDiscard() {
+    socket.emit('attackDiscard', {
+      playerCards: playerDeck,
+      mustDiscard: actionHandler.forcedToDiscard
     })
   }
 
@@ -173,19 +186,32 @@ function onConnection(socket) {
     socket.to(socketGame[socket.id]).emit('changeTurn')
   })
 
+  socket.on('selectedAttackDiscard', (card_id) => {
+    playerDeck.selectDiscard(card_id)
+    actionHandler.decreaseForcedToDiscard()
+    if(actionHandler.forcedToDiscard){
+      attackDiscard()
+    }
+    else{
+      activeRooms[socketGame[socket.id]].clearPlayerAttack()
+      updatePlayer(socketGame[socket.id], false)
+      socket.to(socketGame[socket.id]).emit('changeTurn')
+    }
+  })
+
   socket.on('discardSelectedCards', (card_id) => {
     playerDeck.selectDiscard(card_id)
     selectToDiscard()
   })
 
   socket.on('finishDiscard', () => {
-    if(redrawCards) {
-      cardsToDraw = cardsBeforeDiscard - playerDeck.hand.length
+    if(actionHandler.redrawCards) {
+      const cardsToDraw = actionHandler.cardsBeforeDiscard - playerDeck.hand.length
       for (let i = 1; i <= cardsToDraw; i++) {
         playerDeck.drawCard()
       }
-      redrawCards = false
-      cardsBeforeDiscard = 0
+      actionHandler.noRedrawAfterDiscard()
+      actionHandler.lengthHandBeforeDiscard(0)
       updatePlayer(socketGame[socket.id])
     }
   })
@@ -207,9 +233,15 @@ function onConnection(socket) {
         }
       }
       if(playedCard[CARD_VALUES.NAME] == 'Cellar'){
-        cardsBeforeDiscard = playerDeck.hand.length
-        redrawCards = true
+        actionHandler.lengthHandBeforeDiscard(playerDeck.hand.length)
+        actionHandler.redrawAfterDiscard()
         selectToDiscard()
+        
+      }
+      else if(playedCard[CARD_VALUES.NAME] == 'Militia'){
+        activeRooms[socketGame[socket.id]].playerAttacked(playedCard[CARD_VALUES.NAME])
+        updatePlayer(socketGame[socket.id], false)
+        socket.to(socketGame[socket.id]).emit('attackOpponent')
         
       }
       else {
@@ -221,6 +253,21 @@ function onConnection(socket) {
       cardsInPlay.treasurePlayed(playedCard[CARD_VALUES.VALUE])
       updatePlayer(socketGame[socket.id])
       updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
+    }
+  })
+
+  socket.on('playerAttacked', () => {
+    deactivateSupply(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
+    if (activeRooms[socketGame[socket.id]].attack == 'Militia') {
+      const DISCARDTO = 3
+      if (playerDeck.hand.length > DISCARDTO) {
+        console.log('in player attack discard')
+        actionHandler.forcedToDiscard = playerDeck.hand.length - DISCARDTO
+        attackDiscard()
+      }
+      else{
+        socket.to(socketGame[socket.id]).emit('changeTurn')
+      }
     }
   })
 
@@ -243,6 +290,8 @@ function onConnection(socket) {
     updatePlayer(socketGame[socket.id])
     updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
   })
+
+
 
   socket.on('myTurn', () => {
     updatePlayer(socketGame[socket.id])

@@ -70,6 +70,10 @@ function buyCard (e) {
   socket.emit('buyingCard', this.id)
 }
 
+function attackDiscard (e) {
+  socket.emit('selectedAttackDiscard', this.id)
+}
+
 function discardCard (e) {
   socket.emit('discardSelectedCards', this.id)
 }
@@ -85,6 +89,16 @@ function finishSelectDiscard (){
   socket.emit('finishDiscard')
   finishDiscardButton.style.display = 'none'
 }
+
+function selectAttackDiscard({divNum, cardName}){
+  const cardElement = document.createElement('button')
+  cardElement.id = `${divNum}`
+  cardElement.classList.add('playingCards')
+  cardElement.innerText = cardName
+  cardElement.addEventListener('click', attackDiscard)
+  yourHand.append(cardElement)
+}
+
 
 function selectToDiscard({divNum, cardName}){
   const cardElement = document.createElement('button')
@@ -128,6 +142,7 @@ socket.on('startingGame', (player) => {
 })
 
 socket.on('waitingPlayer', ({playerCards, playerPlay}) => {
+  discardButton.style.display = 'none'
   yourHand.innerText = 'Your Hand:'
   for (let card of playerCards.hand) {
     inactiveCardHand(card[CARD_VALUES.NAME])
@@ -136,6 +151,18 @@ socket.on('waitingPlayer', ({playerCards, playerPlay}) => {
   
   yourPlayTracker.style.display = 'none'
   opponentPlayTracker.style.display = 'block'
+  yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
+})
+
+socket.on('attackDiscard', ({playerCards, mustDiscard}) =>{
+  discardButton.style.display = 'none'
+  yourHand.innerText = `You must Discard ${mustDiscard} card(s)`
+  playerCards.hand.forEach((card, index) => {
+    selectAttackDiscard({
+      divNum: String(index),
+      cardName: card[CARD_VALUES.NAME]
+    })
+  })
   yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
 })
 
@@ -212,6 +239,11 @@ socket.on('activePlayer', ({playerCards, playerPlay}) => {
   yourTreasure.innerText = `Treaure: ${playerPlay.treasure}`
 
   
+})
+
+socket.on('attackOpponent', () => {
+  console.log('in attack opponent')
+  socket.emit('playerAttacked')
 })
 
 socket.on('changeTurn', () => {

@@ -71,6 +71,18 @@ class SupplyCards{
           },
           'type': 'action'
         },
+        'Militia': {
+          'amount': 10,
+          'cost': 4,
+          'value': {
+            'card': 0,
+            'action': 0,
+            'buy': 0,
+            'treasure': 2
+          },
+          'type': 'action'
+        },
+
         'Market': {
           'amount': 10,
           'cost': 5,
