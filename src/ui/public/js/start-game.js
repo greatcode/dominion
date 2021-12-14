@@ -5,6 +5,8 @@ const joinGameButton = document.getElementById('joinGameButton')
 const leaveWaitingRoomButton = document.getElementById('leaveWaitingRoom')
 const discardButton = document.getElementById('discardButton')
 const finishDiscardButton = document.getElementById('finishDiscardButton')
+const discardMoatCardButton = document.getElementById('discardMoatCardButton')
+const keepMoatCardButton = document.getElementById('keepMoatCardButton')
 const waiting = document.getElementById('waiting')
 const gameRoom = document.getElementById('gameRoom')
 const opponent = document.getElementById('opponent')
@@ -38,6 +40,8 @@ joinGameButton.addEventListener('click', addToQueue)
 leaveWaitingRoomButton.addEventListener('click', exitWaitingRoom)
 discardButton.addEventListener('click', toDiscardPile)
 finishDiscardButton.addEventListener('click', finishSelectDiscard)
+discardMoatCardButton.addEventListener('click', discardMoatToAvoidAttack)
+keepMoatCardButton.addEventListener('click', keepMoatAndTakeAttack)
 
 const CARD_VALUES = {
   NAME: 0,
@@ -76,6 +80,18 @@ function attackDiscard (e) {
 
 function discardCard (e) {
   socket.emit('discardSelectedCards', this.id)
+}
+
+function discardMoatToAvoidAttack(){
+  discardMoatCardButton.style.display = 'none'
+  keepMoatCardButton.style.display = 'none'
+  socket.emit('avoidAttack')
+}
+
+function keepMoatAndTakeAttack(){
+  discardMoatCardButton.style.display = 'none'
+  keepMoatCardButton.style.display = 'none'
+  socket.emit('takeAttack')
 }
 
 function toDiscardPile (){
@@ -239,6 +255,11 @@ socket.on('activePlayer', ({playerCards, playerPlay}) => {
   yourTreasure.innerText = `Treaure: ${playerPlay.treasure}`
 
   
+})
+
+socket.on('discardMoatQuery', () => {
+  discardMoatCardButton.style.display = 'block'
+  keepMoatCardButton.style.display = 'block'
 })
 
 socket.on('attackOpponent', () => {

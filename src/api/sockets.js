@@ -102,6 +102,21 @@ function onConnection(socket) {
     })
   }
 
+  function attacked(){
+    deactivateSupply(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
+    if (activeRooms[socketGame[socket.id]].attack == 'Militia') {
+      const DISCARDTO = 3
+      if (playerDeck.hand.length > DISCARDTO) {
+        console.log('in player attack discard')
+        actionHandler.forcedToDiscard = playerDeck.hand.length - DISCARDTO
+        attackDiscard()
+      }
+      else{
+        socket.to(socketGame[socket.id]).emit('changeTurn')
+      }
+    }
+  }
+
   function attackDiscard() {
     socket.emit('attackDiscard', {
       playerCards: playerDeck,
@@ -199,6 +214,8 @@ function onConnection(socket) {
     }
   })
 
+
+
   socket.on('discardSelectedCards', (card_id) => {
     playerDeck.selectDiscard(card_id)
     selectToDiscard()
@@ -258,17 +275,29 @@ function onConnection(socket) {
 
   socket.on('playerAttacked', () => {
     deactivateSupply(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
-    if (activeRooms[socketGame[socket.id]].attack == 'Militia') {
-      const DISCARDTO = 3
-      if (playerDeck.hand.length > DISCARDTO) {
-        console.log('in player attack discard')
-        actionHandler.forcedToDiscard = playerDeck.hand.length - DISCARDTO
-        attackDiscard()
-      }
-      else{
-        socket.to(socketGame[socket.id]).emit('changeTurn')
-      }
+    
+    if(playerDeck.moatInHand){
+      socket.emit('discardMoatQuery')
     }
+    else{
+      attacked()
+    }
+  })
+
+  socket.on('avoidAttack', () => {
+    moatIndex = ''
+    playerDeck.hand.forEach((card, index) => {
+      if(card[CARD_VALUES.NAME] == 'Moat'){
+        moatIndex = index
+      }
+    })
+    playerDeck.selectDiscard(moatIndex)
+    updatePlayer(socketGame[socket.id], false)
+    socket.to(socketGame[socket.id]).emit('changeTurn')
+  })
+
+  socket.on('takeAttack', () => {
+    attacked()
   })
 
   socket.on('buyingCard', (card_id) => {
