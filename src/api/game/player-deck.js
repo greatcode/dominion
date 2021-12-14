@@ -4,6 +4,7 @@ class PersonalDeck{
     this.drawPile = []
     this.hand = []
     this.actionInHand = false
+    this.moatInHand = false
     this.discardPile = []
     this.playedCards = []
     this.CARD_VALUES = {
@@ -57,10 +58,14 @@ class PersonalDeck{
   actionCheck(){
     console.log('actionCheck Ran')
     this.actionInHand = false
+    this.moatInHand = false
     for (let card of this.hand) {
       console.log(card[this.CARD_VALUES.TYPE])
       if (card[this.CARD_VALUES.TYPE] == 'action') {
         this.actionInHand = true
+        if (card[this.CARD_VALUES.NAME] == 'Moat') {
+          this.moatInHand = true
+        }
         console.log('action in Hand')
       }
     }
@@ -76,6 +81,7 @@ class PersonalDeck{
       this.discardPile.push(this.playedCards.pop())
     }
     this.actionInHand = false
+    this.moatInHand = false
   }
 
   purchaseCard(card) {

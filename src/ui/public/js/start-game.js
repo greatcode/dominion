@@ -5,6 +5,8 @@ const joinGameButton = document.getElementById('joinGameButton')
 const leaveWaitingRoomButton = document.getElementById('leaveWaitingRoom')
 const discardButton = document.getElementById('discardButton')
 const finishDiscardButton = document.getElementById('finishDiscardButton')
+const discardMoatCardButton = document.getElementById('discardMoatCardButton')
+const keepMoatCardButton = document.getElementById('keepMoatCardButton')
 const waiting = document.getElementById('waiting')
 const gameRoom = document.getElementById('gameRoom')
 const opponent = document.getElementById('opponent')
@@ -38,6 +40,8 @@ joinGameButton.addEventListener('click', addToQueue)
 leaveWaitingRoomButton.addEventListener('click', exitWaitingRoom)
 discardButton.addEventListener('click', toDiscardPile)
 finishDiscardButton.addEventListener('click', finishSelectDiscard)
+discardMoatCardButton.addEventListener('click', discardMoatToAvoidAttack)
+keepMoatCardButton.addEventListener('click', keepMoatAndTakeAttack)
 
 const CARD_VALUES = {
   NAME: 0,
@@ -70,8 +74,24 @@ function buyCard (e) {
   socket.emit('buyingCard', this.id)
 }
 
+function attackDiscard (e) {
+  socket.emit('selectedAttackDiscard', this.id)
+}
+
 function discardCard (e) {
   socket.emit('discardSelectedCards', this.id)
+}
+
+function discardMoatToAvoidAttack(){
+  discardMoatCardButton.style.display = 'none'
+  keepMoatCardButton.style.display = 'none'
+  socket.emit('avoidAttack')
+}
+
+function keepMoatAndTakeAttack(){
+  discardMoatCardButton.style.display = 'none'
+  keepMoatCardButton.style.display = 'none'
+  socket.emit('takeAttack')
 }
 
 function toDiscardPile (){
@@ -85,6 +105,16 @@ function finishSelectDiscard (){
   socket.emit('finishDiscard')
   finishDiscardButton.style.display = 'none'
 }
+
+function selectAttackDiscard({divNum, cardName}){
+  const cardElement = document.createElement('button')
+  cardElement.id = `${divNum}`
+  cardElement.classList.add('playingCards')
+  cardElement.innerText = cardName
+  cardElement.addEventListener('click', attackDiscard)
+  yourHand.append(cardElement)
+}
+
 
 function selectToDiscard({divNum, cardName}){
   const cardElement = document.createElement('button')
@@ -128,6 +158,7 @@ socket.on('startingGame', (player) => {
 })
 
 socket.on('waitingPlayer', ({playerCards, playerPlay}) => {
+  discardButton.style.display = 'none'
   yourHand.innerText = 'Your Hand:'
   for (let card of playerCards.hand) {
     inactiveCardHand(card[CARD_VALUES.NAME])
@@ -136,6 +167,18 @@ socket.on('waitingPlayer', ({playerCards, playerPlay}) => {
   
   yourPlayTracker.style.display = 'none'
   opponentPlayTracker.style.display = 'block'
+  yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
+})
+
+socket.on('attackDiscard', ({playerCards, mustDiscard}) =>{
+  discardButton.style.display = 'none'
+  yourHand.innerText = `You must Discard ${mustDiscard} card(s)`
+  playerCards.hand.forEach((card, index) => {
+    selectAttackDiscard({
+      divNum: String(index),
+      cardName: card[CARD_VALUES.NAME]
+    })
+  })
   yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
 })
 
@@ -212,6 +255,16 @@ socket.on('activePlayer', ({playerCards, playerPlay}) => {
   yourTreasure.innerText = `Treaure: ${playerPlay.treasure}`
 
   
+})
+
+socket.on('discardMoatQuery', () => {
+  discardMoatCardButton.style.display = 'block'
+  keepMoatCardButton.style.display = 'block'
+})
+
+socket.on('attackOpponent', () => {
+  console.log('in attack opponent')
+  socket.emit('playerAttacked')
 })
 
 socket.on('changeTurn', () => {
