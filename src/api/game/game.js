@@ -9,6 +9,7 @@ class Game{
     this.playingMonarch = monarchs[0]
     this.supply = new SupplyCards()
     this.attack = ''
+    this.moatShown = false
   }
 
   playerAttacked(cardName){
@@ -19,6 +20,10 @@ class Game{
   clearPlayerAttack(){
     this.attack=''
     console.log(`attackCard: ${this.attack}`)
+  }
+
+  resetMoatShown(){
+    this.moatShown = false
   }
 
 

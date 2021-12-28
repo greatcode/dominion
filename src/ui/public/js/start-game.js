@@ -5,13 +5,14 @@ const joinGameButton = document.getElementById('joinGameButton')
 const leaveWaitingRoomButton = document.getElementById('leaveWaitingRoom')
 const discardButton = document.getElementById('discardButton')
 const finishDiscardButton = document.getElementById('finishDiscardButton')
-const discardMoatCardButton = document.getElementById('discardMoatCardButton')
-const keepMoatCardButton = document.getElementById('keepMoatCardButton')
+const showMoatCardButton = document.getElementById('showMoatCardButton')
+const doNotShowMoatCardButton = document.getElementById('doNotShowMoatCardButton')
 const waiting = document.getElementById('waiting')
 const gameRoom = document.getElementById('gameRoom')
 const opponent = document.getElementById('opponent')
 const opponentDrawPile = document.getElementById('opponentDrawPile')
 const opponentHand = document.getElementById('opponentHand')
+const showMoatCard = document.getElementById('showMoatCard')
 const opponentDiscardPile = document.getElementById('opponentDiscardPile')
 const opponentPlayingHand = document.getElementById('opponentPlayingHand')
 const opponentPlayTracker = document.getElementById('opponentPlayTracker')
@@ -40,8 +41,8 @@ joinGameButton.addEventListener('click', addToQueue)
 leaveWaitingRoomButton.addEventListener('click', exitWaitingRoom)
 discardButton.addEventListener('click', toDiscardPile)
 finishDiscardButton.addEventListener('click', finishSelectDiscard)
-discardMoatCardButton.addEventListener('click', discardMoatToAvoidAttack)
-keepMoatCardButton.addEventListener('click', keepMoatAndTakeAttack)
+showMoatCardButton.addEventListener('click', showMoatToAvoidAttack)
+doNotShowMoatCardButton.addEventListener('click', doNotShowMoatAndTakeAttack)
 
 const CARD_VALUES = {
   NAME: 0,
@@ -82,20 +83,21 @@ function discardCard (e) {
   socket.emit('discardSelectedCards', this.id)
 }
 
-function discardMoatToAvoidAttack(){
-  discardMoatCardButton.style.display = 'none'
-  keepMoatCardButton.style.display = 'none'
+function showMoatToAvoidAttack(){
+  showMoatCardButton.style.display = 'none'
+  doNotShowMoatCardButton.style.display = 'none'
   socket.emit('avoidAttack')
 }
 
-function keepMoatAndTakeAttack(){
-  discardMoatCardButton.style.display = 'none'
-  keepMoatCardButton.style.display = 'none'
+function doNotShowMoatAndTakeAttack(){
+  showMoatCardButton.style.display = 'none'
+  doNotShowMoatCardButton.style.display = 'none'
   socket.emit('takeAttack')
 }
 
 function toDiscardPile (){
   socket.emit('discardHand')
+  showMoatCard.style.display = 'none'
   discardButton.style.display = 'none'
   yourPlayTracker.style.display = 'none'
   opponentPlayTracker.style.display = 'block'
@@ -210,7 +212,6 @@ socket.on('activePlayer', ({playerCards, playerPlay}) => {
   yourHand.innerText = 'Your Hand:'
 
   discardButton.style.display = 'block'
-  console.log(`action: ${playerPlay.action}, inHand:${playerCards.actionInHand}`)
   playerCards.hand.forEach((card, index) => {
     if(playerPlay.action && playerCards.actionInHand) {
       if (card[CARD_VALUES.TYPE] == 'action'){
@@ -257,13 +258,17 @@ socket.on('activePlayer', ({playerCards, playerPlay}) => {
   
 })
 
-socket.on('discardMoatQuery', () => {
-  discardMoatCardButton.style.display = 'block'
-  keepMoatCardButton.style.display = 'block'
+socket.on('showMoatQuery', () => {
+  showMoatCardButton.style.display = 'block'
+  doNotShowMoatCardButton.style.display = 'block'
+})
+
+socket.on('showMoat', (cards) => {
+  opponentHand.innerText = `Opponent Hand: ${cards}`
+  showMoatCard.style.display = 'block'
 })
 
 socket.on('attackOpponent', () => {
-  console.log('in attack opponent')
   socket.emit('playerAttacked')
 })
 
@@ -293,7 +298,6 @@ socket.on('activeSupply', ({supply, treasure}) => {
   supplyCoins.innerText = 'Coin Cards: '
   for (const [key, value] of Object.entries(supply.coinCards)) {
     if (value.cost <= treasure & value.amount > 0) {
-      // console.log(`${key}: ${value.cost}, tr:${treasure}`)
       const cardElement = document.createElement('button')
       cardElement.id = `${key}`
       cardElement.innerText = `
@@ -312,7 +316,6 @@ socket.on('activeSupply', ({supply, treasure}) => {
   supplyVictory.innerText = 'Victory Cards: '
   for (const [key, value] of Object.entries(supply.victoryCards)) {
     if (value.cost <= treasure & value.amount > 0) {
-      // console.log(`${key}: ${value.cost}, tr:${treasure}`)
       const cardElement = document.createElement('button')
       cardElement.id = `${key}`
       cardElement.innerText = `
