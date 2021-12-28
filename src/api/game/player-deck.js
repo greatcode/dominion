@@ -40,9 +40,7 @@ class PersonalDeck{
       this.replinishDrawPile()
     }
     this.hand.push(this.drawPile.pop())
-    if (!this.actionInHand) {
-      this.actionCheck()
-    }  
+    this.actionCheck()  
   }
 
   drawHand() {
@@ -56,7 +54,6 @@ class PersonalDeck{
   }
 
   actionCheck(){
-    console.log('actionCheck Ran')
     this.actionInHand = false
     this.moatInHand = false
     for (let card of this.hand) {
@@ -66,7 +63,6 @@ class PersonalDeck{
         if (card[this.CARD_VALUES.NAME] == 'Moat') {
           this.moatInHand = true
         }
-        console.log('action in Hand')
       }
     }
   }
@@ -93,7 +89,6 @@ class PersonalDeck{
     this.playedCards.push(playedCard)
     this.hand.splice(card_place, 1)
     let lastcard = this.playedCards.length -1
-    console.log(`played card:${this.playedCards[lastcard][1]}`)
     if (this.playedCards[lastcard][this.CARD_VALUES.TYPE] == 'action'){
       this.actionCheck()
     }

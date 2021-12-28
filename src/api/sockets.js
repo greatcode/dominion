@@ -3,7 +3,6 @@
 const path = require('path')
 const { report } = require('process')
 const PersonalDeck = require(path.join(__dirname, './game/player-deck.js'))
-// const SupplyCards = require(path.join(__dirname, './game/supply-cards.js'))
 const Game = require(path.join(__dirname, './game/game.js'))
 const CardsInPlay = require(path.join(__dirname, './game/cards-in-play.js'))
 const ActionHandler = require(path.join(__dirname, './game/action.js'))
@@ -55,7 +54,7 @@ function onConnection(socket) {
   function updatePlayer (roomNumber, turn=true) {
     socket.to(roomNumber).emit('updateOpponent', {
       opponentCards: playerDeck,
-      opponentPlay: cardsInPlay
+      opponentPlay: cardsInPlay,
     })
 
     if (turn) {
@@ -75,9 +74,7 @@ function onConnection(socket) {
   }
 
   function updateSupplyCards (roomNumber, supply) {
-    console.log(`buy: ${cardsInPlay.buy}, socket: ${socket.id}`)
     if (cardsInPlay.buy > 0) {
-      console.log('in cards in play')
       socket.emit('activeSupply', {
         supply: supply,
         treasure: cardsInPlay.treasure
@@ -107,7 +104,6 @@ function onConnection(socket) {
     if (activeRooms[socketGame[socket.id]].attack == 'Militia') {
       const DISCARDTO = 3
       if (playerDeck.hand.length > DISCARDTO) {
-        console.log('in player attack discard')
         actionHandler.forcedToDiscard = playerDeck.hand.length - DISCARDTO
         attackDiscard()
       }
@@ -140,8 +136,6 @@ function onConnection(socket) {
       if (waitingRooms.length >= PLAYERS_PER_GAME) {
         room++
         gameRoom = 'room' + room
-        // const supplyCards = new SupplyCards()
-        // const supply = supplyCards;
         const players = [waitingRooms.pop(), waitingRooms.pop()]
         activeRooms[gameRoom] = new Game(gameRoom, players)
         activeGame = activeRooms[gameRoom]
@@ -196,6 +190,7 @@ function onConnection(socket) {
   socket.on('discardHand', () => {
     playerDeck.discard()
     cardsInPlay.resetTracker()
+    activeRooms[socketGame[socket.id]].resetMoatShown()
     playerDeck.drawHand()
     updatePlayer(socketGame[socket.id], false)
     socket.to(socketGame[socket.id]).emit('changeTurn')
@@ -255,7 +250,7 @@ function onConnection(socket) {
         selectToDiscard()
         
       }
-      else if(playedCard[CARD_VALUES.NAME] == 'Militia'){
+      else if(playedCard[CARD_VALUES.NAME] == 'Militia' && !activeRooms[socketGame[socket.id]].moatShown){
         activeRooms[socketGame[socket.id]].playerAttacked(playedCard[CARD_VALUES.NAME])
         updatePlayer(socketGame[socket.id], false)
         socket.to(socketGame[socket.id]).emit('attackOpponent')
@@ -275,9 +270,8 @@ function onConnection(socket) {
 
   socket.on('playerAttacked', () => {
     deactivateSupply(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
-    
     if(playerDeck.moatInHand){
-      socket.emit('discardMoatQuery')
+      socket.emit('showMoatQuery')
     }
     else{
       attacked()
@@ -285,14 +279,11 @@ function onConnection(socket) {
   })
 
   socket.on('avoidAttack', () => {
-    moatIndex = ''
-    playerDeck.hand.forEach((card, index) => {
-      if(card[CARD_VALUES.NAME] == 'Moat'){
-        moatIndex = index
-      }
-    })
-    playerDeck.selectDiscard(moatIndex)
+    const ADJUSTEDHANDLENGTH = playerDeck.hand.length-1
+    activeRooms[socketGame[socket.id]].moatShown = true
+    activeRooms[socketGame[socket.id]].clearPlayerAttack()
     updatePlayer(socketGame[socket.id], false)
+    socket.to(socketGame[socket.id]).emit('showMoat', ADJUSTEDHANDLENGTH)
     socket.to(socketGame[socket.id]).emit('changeTurn')
   })
 
