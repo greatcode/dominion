@@ -57,7 +57,6 @@ class PersonalDeck{
     this.actionInHand = false
     this.moatInHand = false
     for (let card of this.hand) {
-      console.log(card[this.CARD_VALUES.TYPE])
       if (card[this.CARD_VALUES.TYPE] == 'action') {
         this.actionInHand = true
         if (card[this.CARD_VALUES.NAME] == 'Moat') {

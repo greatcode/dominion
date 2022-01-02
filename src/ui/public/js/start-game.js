@@ -10,6 +10,7 @@ const doNotShowMoatCardButton = document.getElementById('doNotShowMoatCardButton
 const waiting = document.getElementById('waiting')
 const gameRoom = document.getElementById('gameRoom')
 const opponent = document.getElementById('opponent')
+const opponentVictoryPoints = document.getElementById('opponentVictoryPoints')
 const opponentDrawPile = document.getElementById('opponentDrawPile')
 const opponentHand = document.getElementById('opponentHand')
 const showMoatCard = document.getElementById('showMoatCard')
@@ -20,6 +21,7 @@ const opponentActionsAvailable = document.getElementById('opponentActionsAvailab
 const opponentBuysAvailable = document.getElementById('opponentBuysAvailable')
 const opponentTreasure = document.getElementById('opponentTreasure')
 const you = document.getElementById('you')
+const yourVictoryPoints = document.getElementById('yourVictoryPoints')
 const yourDrawPile = document.getElementById('yourDrawPile')
 const yourHand = document.getElementById('yourHand')
 const yourDiscardPile = document.getElementById('yourDiscardPile')
@@ -153,13 +155,15 @@ socket.on('startingGame', (player) => {
   you.innerText = `Monarch_${player.you}`
   opponent.innerText = `Monarch_${player.opponentId}`
   gameRoom.innerText = `${player.room}`
+  yourVictoryPoints.innerText = `Victory Points: ${player.victoryPoints}`
+  opponentVictoryPoints.innerText = `Opponent Victory Points: ${player.victoryPoints}`
   waiting.style.display = 'none'
   leaveWaitingRoomButton.style.display = 'none'
   supply.style.display = 'block'
   socket.emit('startingPile')
 })
 
-socket.on('waitingPlayer', ({playerCards, playerPlay}) => {
+socket.on('waitingPlayer', ({playerCards, playerVCPoints}) => {
   discardButton.style.display = 'none'
   yourHand.innerText = 'Your Hand:'
   for (let card of playerCards.hand) {
@@ -169,6 +173,7 @@ socket.on('waitingPlayer', ({playerCards, playerPlay}) => {
   
   yourPlayTracker.style.display = 'none'
   opponentPlayTracker.style.display = 'block'
+  yourVictoryPoints.innerText = `Your Victory Points ${playerVCPoints}`
   yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
 })
 
@@ -207,7 +212,7 @@ socket.on('selectCardsToDiscard', ({playerCards, playerPlay}) => {
 })
 
 
-socket.on('activePlayer', ({playerCards, playerPlay}) => {
+socket.on('activePlayer', ({playerCards, playerPlay, playerVCPoints}) => {
   yourDrawPile.innerText = `Draw Pile: ${playerCards.drawPile.length} cards`
   yourHand.innerText = 'Your Hand:'
 
@@ -250,6 +255,7 @@ socket.on('activePlayer', ({playerCards, playerPlay}) => {
 
   yourPlayTracker.style.display = 'block'
   opponentPlayTracker.style.display = 'none'
+  yourVictoryPoints.innerText = `Your Victory Points ${playerVCPoints}`
   yourDiscardPile.innerText = `Discard Pile: ${playerCards.discardPile.length} cards`
   yourActionsAvailable.innerText = `Action: ${playerPlay.action}`
   yourBuysAvailable.innerText = `Buy: ${playerPlay.buy}`
@@ -276,9 +282,10 @@ socket.on('changeTurn', () => {
   socket.emit('myTurn')
 })
 
-socket.on('updateOpponent', ({opponentCards, opponentPlay}) => {
+socket.on('updateOpponent', ({opponentCards, opponentPlay, opponentVCPoints}) => {
   opponentDrawPile.innerText = `Opponent Draw Pile: ${opponentCards.drawPile.length} cards`
   opponentHand.innerText = `Opponent Hand: ${opponentCards.hand.length}`
+  opponentVictoryPoints.innerText = `Opponent Victory Points: ${opponentVCPoints}`
   opponentPlayingHand.innerText = `Played Cards:`
   for (let card of opponentCards.playedCards) {
     const cardElement = document.createElement('p')
@@ -386,6 +393,24 @@ socket.on('updateSupply', (supplyCards) => {
 
 })
 
+
+
+socket.on('youWin', ({myPoints, opponentPoints}) => {
+  window.alert(`You Win!!! ${myPoints} to ${opponentPoints}`)
+})
+
+socket.on('youLose', ({myPoints, opponentPoints}) => {
+  window.alert(`Your Empire has fallen: Final Score You:${myPoints}, Foe:${opponentPoints}`)
+})
+
+socket.on('tieGame', (points) =>{
+  window.alert(`Finally a worthy opponent. The match ends in a Draw ${points} to ${points}`)
+})
+
+socket.on('gameComplete', () => {
+console.log('gameComplete running')
+  socket.emit('gameOver')
+})
 
 socket.on('clearWaitingRoom', () => {
   waiting.innerText = ''

@@ -3,26 +3,26 @@ class SupplyCards{
   constructor() {
     this.supplyCards = {
       victoryCards: {
-        'Provice': {
-          'amount': 8,
+        'Province': {
+          'amount': 1,
           'cost': 8,
           'value': 6,
           'type': 'vc'
         },
         'Duchy': {
-          'amount': 8,
+          'amount': 1,
           'cost': 5,
           'value': 3,
           'type': 'vc'
         },
         'Estate': {
-          'amount': 8,
+          'amount': 1,
           'cost': 2,
           'value': 1,
           'type': 'vc'
         },
         'Curse': {
-          'amount': 10,
+          'amount': 1,
           'cost': 0,
           'value': -1,
           'type': 'vc'
@@ -30,19 +30,19 @@ class SupplyCards{
       },
       coinCards: {
         'Gold': {
-          'amount': 30,
+          'amount': 5,
           'cost': 6,
           'value': 3,
           'type': 'coin'
         },
         'Silver': {
-          'amount': 40,
+          'amount': 5,
           'cost': 3,
           'value': 2,
           'type': 'coin'
         },
         'Copper': {
-          'amount': 46,
+          'amount': 7,
           'cost': 0,
           'value': 1,
           'type': 'coin'
@@ -50,7 +50,7 @@ class SupplyCards{
       },
       actionCards: {
         'Cellar': {
-          'amount': 10,
+          'amount': 3,
           'cost': 2,
           'value': {
             'card': 0,
@@ -61,7 +61,7 @@ class SupplyCards{
           'type': 'action'
         },
         'Moat': {
-          'amount': 10,
+          'amount': 3,
           'cost': 2,
           'value': {
             'card': 0,
@@ -83,7 +83,7 @@ class SupplyCards{
           'type': 'action'
         },
         'Militia': {
-          'amount': 10,
+          'amount': 3,
           'cost': 4,
           'value': {
             'card': 0,
@@ -95,7 +95,7 @@ class SupplyCards{
         },
 
         'Market': {
-          'amount': 10,
+          'amount': 3,
           'cost': 5,
           'value': {
             'card': 1,

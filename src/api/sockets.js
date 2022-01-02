@@ -4,7 +4,7 @@ const path = require('path')
 const { report } = require('process')
 const PersonalDeck = require(path.join(__dirname, './game/player-deck.js'))
 const Game = require(path.join(__dirname, './game/game.js'))
-const CardsInPlay = require(path.join(__dirname, './game/cards-in-play.js'))
+const PlayTracker = require(path.join(__dirname, './game/play-tracker.js'))
 const ActionHandler = require(path.join(__dirname, './game/action.js'))
 
 
@@ -46,38 +46,44 @@ function onConnection(socket) {
   console.log('A user connected')
 
   const playerDeck = new PersonalDeck()
-  const cardsInPlay = new CardsInPlay()
+  const playTracker = new PlayTracker()
   const actionHandler = new ActionHandler()
 
   // myRoom = activeRooms.filter((room) => // socket.id room.game.players.contains...)
 
   function updatePlayer (roomNumber, turn=true) {
+    const pointTracker = activeRooms[socketGame[socket.id]].victoryTracker.monarchsVictoryPoints
+    const currentPoints = activeRooms[socketGame[socket.id]].victoryTracker.monarchsVictoryPoints[socket.id]
+    for (const [key, value] of Object.entries(pointTracker)){
+      console.log(`key: ${key}, value: ${value}`)
+    }
     socket.to(roomNumber).emit('updateOpponent', {
       opponentCards: playerDeck,
-      opponentPlay: cardsInPlay,
+      opponentPlay: playTracker,
+      opponentVCPoints: currentPoints 
     })
 
     if (turn) {
       socket.emit('activePlayer', {
         playerCards: playerDeck,
-        playerPlay: cardsInPlay,
-
+        playerPlay: playTracker,
+        playerVCPoints: currentPoints
       })
     }
     
     else {
       socket.emit('waitingPlayer', {
         playerCards: playerDeck,
-        playerPlay: cardsInPlay,
+        playerVCPoints: currentPoints
       })
     }
   }
 
   function updateSupplyCards (roomNumber, supply) {
-    if (cardsInPlay.buy > 0) {
+    if (playTracker.buy > 0) {
       socket.emit('activeSupply', {
         supply: supply,
-        treasure: cardsInPlay.treasure
+        treasure: playTracker.treasure
       })
     }
     else {
@@ -95,7 +101,7 @@ function onConnection(socket) {
   function selectToDiscard() {
     socket.emit('selectCardsToDiscard', {
       playerCards: playerDeck,
-      playerPlay: cardsInPlay,
+      playerPlay: playTracker,
     })
   }
 
@@ -119,6 +125,48 @@ function onConnection(socket) {
       mustDiscard: actionHandler.forcedToDiscard
     })
   }
+
+  function gameComplete() {
+    const pointTracker = activeRooms[socketGame[socket.id]].victoryTracker.monarchsVictoryPoints
+    const currentPoints = pointTracker[socket.id]
+    for (const [key, value] of Object.entries(pointTracker)){
+      console.log(`key: ${key}, value: ${value}`)
+      if(key == socket.id){
+        activePlayerPoints = value
+      }
+      else{
+        nonActivePlayerPoints = value
+      }
+    }
+    if(activePlayerPoints > nonActivePlayerPoints){
+      socket.emit('youWin', {
+        myPoints: activePlayerPoints, 
+        opponentPoints: nonActivePlayerPoints
+      })
+      // socket.to(socketGame[socket.id]).emit('youLose',{
+      //   myPoints: nonActivePlayerPoints, 
+      //   opponentPoints: activePlayerPoints
+      // })
+    }
+    else if(activePlayerPoints < nonActivePlayerPoints){
+      socket.emit('youLose', {
+        myPoints: activePlayerPoints, 
+        opponentPoints: nonActivePlayerPoints
+      })
+      // socket.to(socketGame[socket.id]).emit('youWine',{
+      //   myPoints: nonActivePlayerPoints, 
+      //   opponentPoints: activePlayerPoints
+      // })
+    }
+    else{
+      socket.emit('tieGame', activePlayerPoints)
+      // socket.to(socketGame[socket.id]).emit('tieGame', nonActivePlayerPoints)
+    }
+    
+  }
+
+
+    
 
 
 
@@ -155,7 +203,8 @@ function onConnection(socket) {
           player.emit('startingGame', {
             you: player.id,
             opponentId: opponent[0].id,
-            room: gameRoom
+            room: gameRoom,
+            victoryPoints: 3
           })
           socketGame[player.id] = gameRoom
         }
@@ -189,7 +238,7 @@ function onConnection(socket) {
 
   socket.on('discardHand', () => {
     playerDeck.discard()
-    cardsInPlay.resetTracker()
+    playTracker.resetTracker()
     activeRooms[socketGame[socket.id]].resetMoatShown()
     playerDeck.drawHand()
     updatePlayer(socketGame[socket.id], false)
@@ -236,9 +285,8 @@ function onConnection(socket) {
     const playedCard = playerDeck.playedCards[lastCard]
     const actionCheck = activeRooms[socketGame[socket.id]].supply.supplyCards.actionCards
     if (Object.keys(actionCheck).includes(playedCard[CARD_VALUES.NAME])) {
-      console.log(`ActionCheck: ${playedCard[CARD_VALUES.NAME]}`)
       const cardValues = playedCard[CARD_VALUES.VALUE]
-      cardsInPlay.actionPlayed(cardValues)
+      playTracker.actionPlayed(cardValues)
       if (cardValues.card > 0){
         for(let i=1; i <= cardValues.card; i++) {
           playerDeck.drawCard()
@@ -262,7 +310,7 @@ function onConnection(socket) {
       }
     }
     else {
-      cardsInPlay.treasurePlayed(playedCard[CARD_VALUES.VALUE])
+      playTracker.treasurePlayed(playedCard[CARD_VALUES.VALUE])
       updatePlayer(socketGame[socket.id])
       updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
     }
@@ -299,16 +347,45 @@ function onConnection(socket) {
     }
     else if(Object.keys(supplyCheck.victoryCards).includes(card_id)){
       cardKey = supplyCheck.victoryCards[card_id]
+      activeRooms[socketGame[socket.id]].victoryTracker.addVictoryCardPoints(socket.id, cardKey.value)
     }
     else if(Object.keys(supplyCheck.actionCards).includes(card_id)){
       cardKey = supplyCheck.actionCards[card_id]
     }
     card = [card_id, cardKey.type, cardKey.value]
-    cardKey.amount -= 1
     playerDeck.purchaseCard(card)
-    cardsInPlay.updateBuy(decreaseBuy, cardKey.cost*-1)
-    updatePlayer(socketGame[socket.id])
-    updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
+    playTracker.updateBuy(decreaseBuy, cardKey.cost*-1)
+    cardKey.amount -= 1
+    if(cardKey.amount == 0){
+      if(card_id == 'Province'){
+        deactivateSupply(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
+        updatePlayer(socketGame[socket.id], false)
+        gameComplete()
+        socket.to(socketGame[socket.id]).emit('gameComplete')
+      }
+      else{
+        activeRooms[socketGame[socket.id]].victoryTracker.increaseEmptySupplyPiles()
+        if(activeRooms[socketGame[socket.id]].victoryTracker.emptySupplyPiles >= 2){
+          deactivateSupply(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
+          updatePlayer(socketGame[socket.id], false)
+          gameComplete()
+          socket.to(socketGame[socket.id]).emit('gameComplete')
+        }
+        else {
+          updatePlayer(socketGame[socket.id])
+          updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
+        }
+      }
+    }
+    else{
+      updatePlayer(socketGame[socket.id])
+      updateSupplyCards(socketGame[socket.id], activeRooms[socketGame[socket.id]].supply.supplyCards)
+    } 
+  })
+
+  socket.on('gameOver', () => {
+   console.log('game Over running')
+    gameComplete()
   })
 
 
