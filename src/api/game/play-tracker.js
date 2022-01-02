@@ -1,5 +1,5 @@
 
-class CardsInPlay{
+class PlayTracker{
   constructor() {
     this.action = 1
     this.buy = 1
@@ -37,4 +37,4 @@ class CardsInPlay{
   }
 }
 
-module.exports = CardsInPlay
+module.exports = PlayTracker

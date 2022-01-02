@@ -1,6 +1,7 @@
 
 const path = require('path')
 const SupplyCards = require(path.join(__dirname, './supply-cards.js'))
+const VictoryTracker = require(path.join(__dirname, './victory-tracker.js'))
 
 class Game{
   constructor(room, monarchs){
@@ -8,6 +9,7 @@ class Game{
     this._monarchs = monarchs
     this.playingMonarch = monarchs[0]
     this.supply = new SupplyCards()
+    this.victoryTracker = new VictoryTracker(this._monarchs)
     this.attack = ''
     this.moatShown = false
   }
