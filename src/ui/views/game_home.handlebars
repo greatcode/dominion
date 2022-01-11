@@ -1,51 +1,56 @@
 
-<button id='joinGameButton'>Join Game</button>
-<button id="leaveWaitingRoom" style="display: none;">Leave Waiting Room</button>
-<div id='waiting'></div>
-<div id='gameRoom'></div>
-<div id='opponent'></div>
-<div id='opponentVictoryPoints'></div>
-<div id="opponentDrawPile"></div>
-<div id="opponentHand"></div>
-<div id='showMoatCard' style="display: none;">Moat</div>
-<div id='opponentPlayingHand'></div>
-<div id='opponentDiscardPile'></div>
-<div id='opponentPlayTracker' style="display: block;">
-  <div id='opponentActionsAvailable'></div>
-  <div id='opponentBuysAvailable'></div>
-  <div id='opponentTreasure'></div>
+<div class="container-fluid">
+  {{> page/dominion_title}}
+  <button id='joinGameButton' class="pre-game-btn btn btn-secondary col-4">Join Game</button>
+  <button id="leaveWaitingRoom" class="pre-game-btn btn btn-danger col-4" style="display: none;">Leave Waiting Room</button>
+  <div id='waiting'></div>
+  <div id='gameRoom'></div>
+  <div id='opponent'></div>
+  <div id='opponentVictoryPoints'></div>
+  <div id="opponentDrawPile"></div>
+  <div id="opponentHand"></div>
+  <div id='showMoatCard' style="display: none;">Moat</div>
+  <div id='opponentPlayingHand'></div>
+  <div id='opponentDiscardPile'></div>
+  <div id='opponentPlayTracker' style="display: block;">
+    <div id='opponentActionsAvailable'></div>
+    <div id='opponentBuysAvailable'></div>
+    <div id='opponentTreasure'></div>
+  </div>
+
+
+
+  {{> page/supply}}
+
+
+
+
+  <div id='you'></div>
+  <div id="yourVictoryPoints"></div>
+  <div id="yourDrawPile"></div>
+  <div id="yourHand"></div>
+  <div id='yourPlayingHand'></div>
+  <div id="yourDiscardPile"></div>
+  <div id='yourPlayTracker' style="display: none;">
+    <div id='yourActionsAvailable'></div>
+    <div id='yourBuysAvailable'></div>
+    <div id='yourTreasure'></div>
+  </div>
+
+  <button id='discardButton' style="display: none;">Discard</button>
+  <button id='finishDiscardButton' style="display: none;">Finished Discarding</button>
+  <button id='showMoatCardButton' style="display: none;">Show Moat Card and Avoid Attack</button>
+  <button id='doNotShowMoatCardButton' style="display: none;">Do Not Show Moat Card and Take Attack</button>
+
+
+
+  {{!-- <div id='supply' style="display: none;">
+    <div id='supplyCoins'></div>
+    <div id='supplyVictory'></div>
+    <div id='supplyAction'></div>
+  </div> --}}
 </div>
 
-
-
-
-<div id='you'></div>
-<div id="yourVictoryPoints"></div>
-<div id="yourDrawPile"></div>
-<div id="yourHand"></div>
-<div id='yourPlayingHand'></div>
-<div id="yourDiscardPile"></div>
-<div id='yourPlayTracker' style="display: none;">
-  <div id='yourActionsAvailable'></div>
-  <div id='yourBuysAvailable'></div>
-  <div id='yourTreasure'></div>
-</div>
-
-<button id='discardButton' style="display: none;">Discard</button>
-<button id='finishDiscardButton' style="display: none;">Finished Discarding</button>
-<button id='showMoatCardButton' style="display: none;">Show Moat Card and Avoid Attack</button>
-<button id='doNotShowMoatCardButton' style="display: none;">Do Not Show Moat Card and Take Attack</button>
-
-
-
-<div id='supply' style="display: none;">
-  <div id='supplyCoins'></div>
-  <div id='supplyVictory'></div>
-  <div id='supplyAction'></div>
-</div>
-
-
-<di></div>
 
 
 
