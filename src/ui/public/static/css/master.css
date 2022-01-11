@@ -1,0 +1,40 @@
+body{
+  background-image: url(/static/img/base_bg.png);
+  font-family: 'MedievalSharp', cursive;
+}
+
+#title img{
+  width: 60%;
+  height: 60%;
+}
+
+.pre-game-btn{
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  /* color: aqua;
+  background-color: blueviolet;
+  justify-content: center; */
+}
+
+#waiting{
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+
+
+.card{
+  width: 14rem;
+  height: 11rem;
+  margin: 1rem;
+}
+
+.card-img{
+  width: 100%;
+  height: 40vh;
+  object-fit: cover;
+}
+
+.card-text{
+  margin: auto;
+}

@@ -1,6 +1,7 @@
 
 const socket = io()
 
+const title = document.getElementById('title')
 const joinGameButton = document.getElementById('joinGameButton')
 const leaveWaitingRoomButton = document.getElementById('leaveWaitingRoom')
 const discardButton = document.getElementById('discardButton')
@@ -146,6 +147,91 @@ function inactiveCardHand (cardName){
       yourHand.append(cardElement)
 }
 
+function createCoinAndVCSupplyCards(key, value, type, active){
+  const cardElement = document.createElement('div')
+  cardElement.className = 'card'
+  const imageElement = document.createElement('img')
+  imageElement.className = 'card-img'
+  imageElement.src = '/static/img/base_bg.png'
+  const detailElement = document.createElement('div')
+  detailElement.className = 'card-img-overlay'
+  const titleElement = document.createElement('h5')
+  titleElement.className = 'card-title'
+  titleElement.innerText = `${key}`
+  const quantityElement = document.createElement('p')
+  quantityElement.className = 'card-text'
+  quantityElement.innerText = `Cards Left: ${value.amount}`
+  const valueElement = document.createElement('p')
+  valueElement.className = 'card-text'
+  valueElement.innerText = `Value: ${value.value}`
+  const costElement = document.createElement('p')
+  costElement.className = 'card-text'
+  costElement.innerText = `Cost ${value.cost}`
+  detailElement.append(titleElement)
+  detailElement.append(quantityElement)
+  detailElement.append(valueElement)
+  detailElement.append(costElement)
+  if(active){
+  const buyButton = document.createElement('button')
+  buyButton.className = 'card-text'
+  buyButton.id = `${key}`
+  buyButton.innerText = 'Buy Card'
+  buyButton.addEventListener('click', buyCard)
+  detailElement.append(buyButton)
+  }
+  cardElement.append(imageElement)
+  cardElement.append(detailElement)
+  if(type == 'coin'){
+  supplyCoins.append(cardElement)
+  return;
+  }
+  supplyVictory.append(cardElement)      
+}
+
+function createActionSupplyCards(key, value, active){
+  let actions = []
+  for (const [actionKey, actionValue] of Object.entries(value.value)) {
+    if (actionValue != 0){
+      console.log('adding actions')
+      actions.push(`${actionKey}:${actionValue} `)
+    }
+  }
+  const cardElement = document.createElement('div')
+  cardElement.className = 'card'
+  const imageElement = document.createElement('img')
+  imageElement.className = 'card-img'
+  imageElement.src = '/static/img/base_bg.png'
+  const detailElement = document.createElement('div')
+  detailElement.className = 'card-img-overlay'
+  const titleElement = document.createElement('h5')
+  titleElement.className = 'card-title'
+  titleElement.innerText = `${key}`
+  const quantityElement = document.createElement('p')
+  quantityElement.className = 'card-text'
+  quantityElement.innerText = `Cards Left: ${value.amount}`
+  const actionElement = document.createElement('p')
+  actionElement.className = 'card-text'
+  actionElement.innerText = `Actions: ${actions}`
+  const costElement = document.createElement('p')
+  costElement.className = 'card-text'
+  costElement.innerText = `Cost ${value.cost}`
+  detailElement.append(titleElement)
+  detailElement.append(quantityElement)
+  detailElement.append(actionElement)
+  detailElement.append(costElement)
+  if(active){
+  const buyButton = document.createElement('button')
+  buyButton.className = 'card-text'
+  buyButton.id = `${key}`
+  buyButton.innerText = 'Buy Card'
+  buyButton.addEventListener('click', buyCard)
+  detailElement.append(buyButton)
+  }
+  cardElement.append(imageElement)
+  cardElement.append(detailElement)
+  supplyAction.append(cardElement)
+}
+
 
 socket.on('playerReady', (player) => {
   waiting.innerText = `${player.player} is waiting to play`
@@ -159,6 +245,7 @@ socket.on('startingGame', (player) => {
   opponentVictoryPoints.innerText = `Opponent Victory Points: ${player.victoryPoints}`
   waiting.style.display = 'none'
   leaveWaitingRoomButton.style.display = 'none'
+  title.style.display = 'none'
   supply.style.display = 'block'
   socket.emit('startingPile')
 })
@@ -305,59 +392,45 @@ socket.on('activeSupply', ({supply, treasure}) => {
   supplyCoins.innerText = 'Coin Cards: '
   for (const [key, value] of Object.entries(supply.coinCards)) {
     if (value.cost <= treasure & value.amount > 0) {
-      const cardElement = document.createElement('button')
-      cardElement.id = `${key}`
-      cardElement.innerText = `
-      ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
-      cardElement.addEventListener('click', buyCard)
-      supplyCoins.append(cardElement)
+      createCoinAndVCSupplyCards(key, value,'coin', true)
     }
     else {
-      const cardElement = document.createElement('p')
-      cardElement.innerText = `
-      ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
-      supplyCoins.append(cardElement)
+      createCoinAndVCSupplyCards(key, value,'coin', false)
     }
     
   }
   supplyVictory.innerText = 'Victory Cards: '
   for (const [key, value] of Object.entries(supply.victoryCards)) {
     if (value.cost <= treasure & value.amount > 0) {
-      const cardElement = document.createElement('button')
-      cardElement.id = `${key}`
-      cardElement.innerText = `
-      ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
-      cardElement.addEventListener('click', buyCard)
-      supplyVictory.append(cardElement)
+      createCoinAndVCSupplyCards(key, value,'victory', true)
     }
     else {
-      const cardElement = document.createElement('p')
-      cardElement.innerText = `
-      ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
-      supplyVictory.append(cardElement)
+      createCoinAndVCSupplyCards(key, value,'victory', false)
     }
   }
   supplyAction.innerText = 'Action Cards: '
   for (const [key, value] of Object.entries(supply.actionCards)) {
-    let actions = []
-    for (const [actionKey, actionValue] of Object.entries(value.value)) {
-      if (actionValue != 0){
-        actions.push(`${actionKey}:${actionValue} `)
-      }
-    }
+    // let actions = []
+    // for (const [actionKey, actionValue] of Object.entries(value.value)) {
+    //   if (actionValue != 0){
+    //     actions.push(`${actionKey}:${actionValue} `)
+    //   }
+    // }
     if (value.cost <= treasure & value.amount > 0) {
-      const cardElement = document.createElement('button')
-      cardElement.id = `${key}`
-      cardElement.innerText = `
-      ${key}: amount:${value.amount}, action: ${actions}, cost:${value.cost}`
-      cardElement.addEventListener('click', buyCard)
-      supplyAction.append(cardElement)
+      createActionSupplyCards(key, value, true)
+      // const cardElement = document.createElement('button')
+      // cardElement.id = `${key}`
+      // cardElement.innerText = `
+      // ${key}: amount:${value.amount}, action: ${actions}, cost:${value.cost}`
+      // cardElement.addEventListener('click', buyCard)
+      // supplyAction.append(cardElement)
     }
     else{
-      const cardElement = document.createElement('p')
-      cardElement.innerText = `
-      ${key}: amount:${value.amount}, action: ${actions}, cost:${value.cost}`
-      supplyAction.append(cardElement)
+      createActionSupplyCards(key, value, false)
+      // const cardElement = document.createElement('p')
+      // cardElement.innerText = `
+      // ${key}: amount:${value.amount}, action: ${actions}, cost:${value.cost}`
+      // supplyAction.append(cardElement)
     }
   }
 })
@@ -365,30 +438,25 @@ socket.on('activeSupply', ({supply, treasure}) => {
 socket.on('updateSupply', (supplyCards) => {
   supplyCoins.innerText = 'Coin Cards: '
   for (const [key, value] of Object.entries(supplyCards.coinCards)) {
-    const cardElement = document.createElement('p')
-    cardElement.innerText = `
-    ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
-    supplyCoins.append(cardElement)
+    createCoinAndVCSupplyCards(key, value,'coin', false)
   }
   supplyVictory.innerText = 'Victory Cards: '
   for (const [key, value] of Object.entries(supplyCards.victoryCards)) {
-    const cardElement = document.createElement('p')
-    cardElement.innerText = `
-    ${key}: amount:${value.amount}, value:${value.value}, cost:${value.cost}`
-    supplyVictory.append(cardElement)
+    createCoinAndVCSupplyCards(key, value,'victory', false)
   }
   supplyAction.innerText = 'Action Cards: '
   for (const [key, value] of Object.entries(supplyCards.actionCards)) {
-    let actions = []
-    for (const [actionKey, actionValue] of Object.entries(value.value)) {
-      if (actionValue != 0){
-        actions.push(`${actionKey}:${actionValue} `)
-      }
-    }
-    const cardElement = document.createElement('p')
-    cardElement.innerText = `
-    ${key}: amount:${value.amount}, action: ${actions}, cost:${value.cost}`
-    supplyAction.append(cardElement)
+    createActionSupplyCards(key, value, false)
+    // let actions = []
+    // for (const [actionKey, actionValue] of Object.entries(value.value)) {
+    //   if (actionValue != 0){
+    //     actions.push(`${actionKey}:${actionValue} `)
+    //   }
+    // }
+    // const cardElement = document.createElement('p')
+    // cardElement.innerText = `
+    // ${key}: amount:${value.amount}, action: ${actions}, cost:${value.cost}`
+    // supplyAction.append(cardElement)
   }
 
 })
@@ -415,8 +483,3 @@ console.log('gameComplete running')
 socket.on('clearWaitingRoom', () => {
   waiting.innerText = ''
 })
-
-
-
-
-

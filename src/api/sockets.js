@@ -52,11 +52,7 @@ function onConnection(socket) {
   // myRoom = activeRooms.filter((room) => // socket.id room.game.players.contains...)
 
   function updatePlayer (roomNumber, turn=true) {
-    const pointTracker = activeRooms[socketGame[socket.id]].victoryTracker.monarchsVictoryPoints
     const currentPoints = activeRooms[socketGame[socket.id]].victoryTracker.monarchsVictoryPoints[socket.id]
-    for (const [key, value] of Object.entries(pointTracker)){
-      console.log(`key: ${key}, value: ${value}`)
-    }
     socket.to(roomNumber).emit('updateOpponent', {
       opponentCards: playerDeck,
       opponentPlay: playTracker,
@@ -128,9 +124,7 @@ function onConnection(socket) {
 
   function gameComplete() {
     const pointTracker = activeRooms[socketGame[socket.id]].victoryTracker.monarchsVictoryPoints
-    const currentPoints = pointTracker[socket.id]
     for (const [key, value] of Object.entries(pointTracker)){
-      console.log(`key: ${key}, value: ${value}`)
       if(key == socket.id){
         activePlayerPoints = value
       }
@@ -143,24 +137,15 @@ function onConnection(socket) {
         myPoints: activePlayerPoints, 
         opponentPoints: nonActivePlayerPoints
       })
-      // socket.to(socketGame[socket.id]).emit('youLose',{
-      //   myPoints: nonActivePlayerPoints, 
-      //   opponentPoints: activePlayerPoints
-      // })
     }
     else if(activePlayerPoints < nonActivePlayerPoints){
       socket.emit('youLose', {
         myPoints: activePlayerPoints, 
         opponentPoints: nonActivePlayerPoints
       })
-      // socket.to(socketGame[socket.id]).emit('youWine',{
-      //   myPoints: nonActivePlayerPoints, 
-      //   opponentPoints: activePlayerPoints
-      // })
     }
     else{
       socket.emit('tieGame', activePlayerPoints)
-      // socket.to(socketGame[socket.id]).emit('tieGame', nonActivePlayerPoints)
     }
     
   }
@@ -187,7 +172,6 @@ function onConnection(socket) {
         const players = [waitingRooms.pop(), waitingRooms.pop()]
         activeRooms[gameRoom] = new Game(gameRoom, players)
         activeGame = activeRooms[gameRoom]
-        console.log(`game_room: ${activeGame._room}`)
         if (waitingRooms.length == 0) {
           socket.broadcast.emit('clearWaitingRoom')
         }
